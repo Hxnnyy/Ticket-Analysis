@@ -1,0 +1,7 @@
+altair>=5.0
+pandas>=2.1
+playwright>=1.40
+pytest>=7.4
+pytest-playwright>=0.4
+streamlit>=1.36
+supabase>=2.4
