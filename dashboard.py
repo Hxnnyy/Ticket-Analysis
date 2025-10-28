@@ -60,96 +60,480 @@ def _inject_theme() -> None:
         """
         <style>
             :root {
-                --ticket-purple-500: #6b46ff;
-                --ticket-purple-400: #7f5bff;
-                --ticket-purple-200: #e3d8ff;
-                --ticket-purple-50: #f6f2ff;
-                --ticket-surface: rgba(19, 16, 40, 0.75);
+                --ticket-purple-950: #05010f;
+                --ticket-purple-900: #0d0720;
+                --ticket-purple-800: #130b2f;
+                --ticket-purple-700: #6b46ff;
+                --ticket-purple-500: #9c7aff;
+                --ticket-purple-300: #c0b0ff;
+                --ticket-ink-100: rgba(241, 237, 255, 0.82);
             }
 
             .stApp {
-                background: radial-gradient(circle at 0% 0%, rgba(123, 97, 255, 0.18), transparent 40%),
-                            radial-gradient(circle at 100% 0%, rgba(106, 76, 255, 0.25), transparent 35%),
-                            #0f0b22;
-                color: #f7f5ff;
+                background: radial-gradient(120% 120% at 0% 0%, rgba(149, 110, 255, 0.16), transparent 45%),
+                            radial-gradient(100% 120% at 100% 0%, rgba(85, 53, 214, 0.26), transparent 55%),
+                            linear-gradient(180deg, #060313 0%, #0d0720 55%, #120b2b 100%);
+                color: #f4f1ff;
+                font-family: 'Inter', sans-serif;
             }
 
-            .purple-hero-card {
-                background: linear-gradient(135deg, rgba(107, 70, 255, 0.88), rgba(40, 18, 98, 0.95));
-                border-radius: 24px;
-                padding: 28px;
-                box-shadow: 0 20px 45px rgba(31, 18, 77, 0.45);
-                color: #fdfdff;
-                margin-bottom: 1.5rem;
+            .stApp header {
+                background: transparent;
             }
 
-            .purple-hero-card h1 {
-                font-size: 2.1rem;
-                font-weight: 700;
-                margin-bottom: 0.3rem;
+            .stApp [data-testid="stToolbar"] {
+                display: none;
             }
 
-            .purple-hero-card p {
-                font-size: 1rem;
-                opacity: 0.92;
+            main.stAppViewContainer > .main,
+            .stApp main .block-container {
+                padding-top: 2.4rem;
+                padding-bottom: 2rem;
             }
 
-            .status-badge-container {
-                display: flex;
-                gap: 0.5rem;
-                flex-wrap: wrap;
-                margin: 0.75rem 0 0;
+            .section-title {
+                font-size: 1.35rem;
+                letter-spacing: 0.01em;
+                margin: 2.2rem 0 1rem;
+                color: #f1edff;
+            }
+
+            [data-testid="stSidebar"] {
+                background: linear-gradient(200deg, rgba(33, 22, 78, 0.98) 0%, rgba(15, 10, 40, 0.98) 100%);
+                border-right: 1px solid rgba(146, 119, 255, 0.45);
+                box-shadow: 12px 0 40px rgba(5, 4, 20, 0.6);
+            }
+
+            [data-testid="stSidebar"] .block-container {
+                padding: 2.8rem 1.6rem;
+            }
+
+            [data-testid="stSidebar"] * {
+                color: #eae4ff;
             }
 
             .sidebar-section-title {
                 font-weight: 600;
-                letter-spacing: 0.02em;
+                font-size: 0.78rem;
+                letter-spacing: 0.18em;
                 text-transform: uppercase;
-                font-size: 0.8rem;
-                color: #d7cfff;
-                margin-top: 1.2rem;
+                color: rgba(204, 195, 255, 0.8);
+                margin-bottom: 0.75rem;
+            }
+
+            [data-testid="stSidebar"] .stFileUploader label {
+                color: rgba(228, 223, 255, 0.8);
+            }
+
+            [data-testid="stSidebar"] .stAlert {
+                border-radius: 16px;
+                background: rgba(22, 17, 48, 0.85);
+                border: 1px solid rgba(132, 111, 255, 0.3);
+            }
+
+            .hero-wrapper {
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                gap: 2.4rem;
+                align-items: stretch;
+                background: linear-gradient(135deg, rgba(33, 21, 79, 0.85), rgba(14, 7, 36, 0.92));
+                border: 1px solid rgba(132, 111, 255, 0.35);
+                border-radius: 28px;
+                padding: 2.5rem 2.7rem;
+                box-shadow: 0 32px 60px rgba(10, 6, 32, 0.55);
+                margin-bottom: 2.2rem;
+            }
+
+            .hero-wrapper::before,
+            .hero-wrapper::after {
+                content: "";
+                position: absolute;
+                border-radius: 999px;
+                opacity: 0.35;
+            }
+
+            .hero-wrapper::before {
+                width: 320px;
+                height: 320px;
+                right: -120px;
+                top: -80px;
+                background: radial-gradient(circle, rgba(151, 129, 255, 0.55) 0%, transparent 70%);
+            }
+
+            .hero-wrapper::after {
+                width: 260px;
+                height: 260px;
+                left: -140px;
+                bottom: -120px;
+                background: radial-gradient(circle, rgba(85, 59, 214, 0.5) 0%, transparent 75%);
+            }
+
+            .hero-copy {
+                flex: 1 1 60%;
+                position: relative;
+                z-index: 2;
+            }
+
+            .hero-kicker {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.28rem 0.7rem;
+                border-radius: 999px;
+                background: rgba(92, 70, 205, 0.35);
+                border: 1px solid rgba(153, 131, 255, 0.55);
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.22em;
+                margin-bottom: 0.9rem;
+                color: #dcd4ff;
+            }
+
+            .hero-copy h1 {
+                font-size: 2.3rem;
+                font-weight: 700;
+                margin: 0 0 0.6rem;
+                color: #ffffff;
+            }
+
+            .hero-copy p {
+                margin: 0;
+                font-size: 1rem;
+                line-height: 1.6;
+                color: rgba(235, 231, 255, 0.85);
+            }
+
+            .hero-pills {
+                margin-top: 1.6rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.65rem;
+            }
+
+            .hero-pill {
+                padding: 0.55rem 0.9rem;
+                border-radius: 14px;
+                background: rgba(20, 15, 46, 0.85);
+                border: 1px solid rgba(146, 118, 255, 0.35);
+                font-size: 0.78rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+
+            .hero-pill::before {
+                content: "\2022";
+                color: #9e88ff;
+                font-size: 1.2rem;
+                line-height: 0;
+            }
+
+            .hero-visual {
+                flex: 1 1 32%;
+                position: relative;
+                z-index: 2;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .hero-orb {
+                position: relative;
+                width: 260px;
+                height: 260px;
+                border-radius: 30px;
+                background: linear-gradient(135deg, rgba(141, 110, 255, 0.5), rgba(35, 18, 98, 0.95));
+                border: 1px solid rgba(177, 161, 255, 0.55);
+                box-shadow: inset 0 0 40px rgba(230, 222, 255, 0.08);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.6rem;
+            }
+
+            .hero-orb::before,
+            .hero-orb::after {
+                content: "";
+                position: absolute;
+                border-radius: 999px;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.65), transparent 70%);
+                opacity: 0.22;
+            }
+
+            .hero-orb::before {
+                width: 160px;
+                height: 160px;
+                top: -60px;
+                left: 20px;
+            }
+
+            .hero-orb::after {
+                width: 140px;
+                height: 140px;
+                bottom: -50px;
+                right: 10px;
+            }
+
+            .hero-orb__label {
+                font-size: 0.75rem;
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                color: rgba(232, 225, 255, 0.7);
+            }
+
+            .hero-orb__value {
+                font-size: 2.8rem;
+                font-weight: 700;
+                color: #ffffff;
+                text-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            }
+
+            .hero-orb__meta {
+                font-size: 0.85rem;
+                color: rgba(232, 225, 255, 0.7);
+            }
+
+            .metric-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.2rem;
+            }
+
+            .metric-card {
+                position: relative;
+                border-radius: 22px;
+                padding: 1.4rem 1.6rem;
+                background: rgba(19, 14, 44, 0.9);
+                border: 1px solid rgba(116, 96, 226, 0.4);
+                overflow: hidden;
+                box-shadow: 0 14px 36px rgba(6, 3, 23, 0.45);
+                --metric-accent: rgba(156, 122, 255, 0.6);
+                --metric-soft: rgba(140, 114, 255, 0.25);
+                --metric-border: rgba(170, 152, 255, 0.35);
+            }
+
+            .metric-card::after {
+                content: "";
+                position: absolute;
+                inset: 12px -30px auto auto;
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: radial-gradient(circle at center, var(--metric-accent), transparent 65%);
+                opacity: 0.35;
+                transform: rotate(25deg);
+            }
+
+            .metric-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.35rem;
+                background: var(--metric-soft);
+                border: 1px solid var(--metric-border);
+                margin-bottom: 0.8rem;
+            }
+
+            .metric-value {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #f9f8ff;
+            }
+
+            .metric-label {
+                font-size: 0.85rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: rgba(215, 205, 255, 0.75);
+            }
+
+            .metric-caption {
+                margin-top: 0.35rem;
+                font-size: 0.85rem;
+                color: rgba(222, 217, 255, 0.6);
+            }
+
+            .chart-card {
+                position: relative;
+                border-radius: 24px;
+                padding: 1.3rem 1.5rem 1.6rem;
+                background: rgba(16, 11, 38, 0.88);
+                border: 1px solid rgba(104, 83, 226, 0.35);
+                box-shadow: 0 16px 42px rgba(8, 4, 28, 0.55);
+                margin-bottom: 1.4rem;
+            }
+
+            .chart-card::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(113, 90, 255, 0.08), transparent);
+                border-radius: inherit;
+                pointer-events: none;
+            }
+
+            .chart-card__header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+                position: relative;
+                z-index: 2;
+            }
+
+            .chart-card__title {
+                font-size: 1.05rem;
+                font-weight: 600;
+                color: #f0ecff;
+            }
+
+            .chart-card .stAltairChart {
+                position: relative;
+                z-index: 2;
+            }
+
+            .chart-card > div[data-testid="column"] > div {
+                padding: 0 !important;
             }
 
             .dataset-card {
-                border-radius: 16px;
-                background: rgba(27, 23, 50, 0.72);
-                border: 1px solid rgba(123, 97, 255, 0.25);
-                padding: 1rem;
-                margin-bottom: 0.9rem;
-                box-shadow: 0 10px 26px rgba(17, 8, 52, 0.35);
+                position: relative;
+                border-radius: 20px;
+                padding: 1.1rem 1.3rem;
+                background: rgba(20, 15, 46, 0.9);
+                border: 1px solid rgba(130, 108, 255, 0.35);
+                margin-bottom: 0.75rem;
+                overflow: hidden;
+            }
+
+            .dataset-card::before {
+                content: "";
+                position: absolute;
+                top: -50px;
+                right: -30px;
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(149, 126, 255, 0.45), transparent 70%);
+                opacity: 0.45;
             }
 
             .dataset-card h4 {
-                margin-bottom: 0.25rem;
-                font-size: 1rem;
+                font-size: 1.02rem;
+                font-weight: 600;
+                margin-bottom: 0.2rem;
+                color: #f2eeff;
             }
 
             .dataset-meta {
                 font-size: 0.78rem;
-                opacity: 0.7;
-                margin-bottom: 0.6rem;
+                color: rgba(221, 215, 255, 0.65);
+                margin-bottom: 0;
+            }
+
+            .dataset-controls {
+                background: rgba(12, 8, 30, 0.85);
+                border: 1px solid rgba(117, 97, 223, 0.3);
+                border-radius: 16px;
+                padding: 0.95rem 1.1rem;
+                margin: 0.6rem 0 1.4rem;
+                display: flex;
+                gap: 1.2rem;
+            }
+
+            .dataset-controls > div[data-testid="column"] > div {
+                padding: 0 !important;
+            }
+
+            .insight-card {
+                position: relative;
+                border-radius: 24px;
+                padding: 1.6rem 1.8rem;
+                background: rgba(17, 12, 42, 0.9);
+                border: 1px solid rgba(125, 103, 240, 0.32);
+                box-shadow: 0 18px 44px rgba(5, 3, 20, 0.55);
+                margin-top: 1.8rem;
+            }
+
+            .insight-card h4 {
+                margin: 0 0 1rem;
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: #f6f3ff;
+            }
+
+            .insight-card::before {
+                content: "";
+                position: absolute;
+                inset: -30px auto auto -40px;
+                width: 150px;
+                height: 150px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(123, 98, 255, 0.35), transparent 70%);
+                opacity: 0.6;
+            }
+
+            .insight-card ul {
+                padding-left: 1.2rem;
+                margin: 0;
+                color: rgba(226, 221, 255, 0.82);
+                line-height: 1.55;
+            }
+
+            .insight-card li {
+                margin-bottom: 0.7rem;
             }
 
             .stDataFrame {
-                background: rgba(19, 16, 40, 0.68);
-                border-radius: 18px;
-                border: 1px solid rgba(108, 90, 255, 0.35);
+                background: rgba(15, 10, 36, 0.92);
+                border-radius: 22px;
+                border: 1px solid rgba(112, 90, 226, 0.35);
+                box-shadow: 0 20px 48px rgba(6, 3, 23, 0.5);
+                overflow: hidden;
             }
 
             .stDataFrame [data-testid="stTable"] {
                 background: transparent;
             }
 
-            .section-title {
-                font-size: 1.4rem;
-                margin-top: 1.2rem;
-                margin-bottom: 0.4rem;
-                color: #efe9ff;
+            .stDataFrame thead tr th {
+                background: rgba(21, 17, 48, 0.9);
+                color: #f1edff;
+            }
+
+            div[data-testid="stExpander"] {
+                background: rgba(14, 10, 36, 0.85);
+                border: 1px solid rgba(117, 98, 232, 0.3);
+                border-radius: 16px !important;
+            }
+
+            div[data-testid="stExpander"] summary {
+                color: rgba(223, 218, 255, 0.85);
+            }
+
+            .stAlert {
+                border-radius: 18px;
+                border: 1px solid rgba(132, 111, 255, 0.35);
+                background: rgba(19, 14, 48, 0.8);
+                color: #f1edff;
             }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
+
+def _sanitize_key(*parts: str) -> str:
+    safe_parts = []
+    for part in parts:
+        safe = re.sub(r"[^0-9A-Za-z]+", "_", str(part))
+        safe_parts.append(safe.strip("_"))
+    return "_".join(safe_parts)
 
 
 def _sync_session_registry(registry: Dict[str, DatasetMeta]) -> None:
@@ -182,6 +566,21 @@ def _sync_session_registry(registry: Dict[str, DatasetMeta]) -> None:
             )
             for name, meta in registry.items()
         }
+
+    current_names = set(current.keys()) if isinstance(current, dict) else set()
+
+    for name, meta in registry.items():
+        include_key = _sanitize_key("dataset", name, "include")
+        current_value = st.session_state.get(include_key)
+        if needs_refresh or not isinstance(current_value, bool):
+            st.session_state[include_key] = meta.included
+
+    removed_names = current_names - set(registry.keys())
+    for name in removed_names:
+        include_key = _sanitize_key("dataset", name, "include")
+        st.session_state.pop(include_key, None)
+
+
 def _trigger_rerun() -> None:
     if hasattr(st, "rerun"):
         st.rerun()
@@ -388,45 +787,50 @@ def _render_header(bundle: DatasetLoadResult) -> None:
     included = sum(1 for meta in bundle.registry.values() if meta.included)
     total = len(bundle.registry)
     record_count = len(bundle.combined)
+    active_line = (
+        f"{included} dataset{'s' if included != 1 else ''} active"
+        if included
+        else "Activate a dataset to populate insights"
+    )
+    stored_line = (
+        f"{total} dataset{'s' if total != 1 else ''} stored" if total else "No datasets uploaded yet"
+    )
+    source_line = "Supabase live" if bundle.source == "supabase" else "Local fallback mode"
+    closed_ratio = 0
+    if record_count:
+        closed_series = bundle.combined["Is Closed"].mean()
+        if pd.notna(closed_series):
+            closed_ratio = int(round(float(closed_series) * 100))
     data_line = (
         f"{record_count:,} tickets across {included} active dataset{'s' if included != 1 else ''}."
         if included
-        else "Activate a dataset to populate insights."
+        else "Upload or enable a dataset to unlock the command center."
     )
 
-    st.markdown(
-        """
-        <div class="purple-hero-card">
-            <h1>Ticket Analysis Dashboard</h1>
-            <p>Monitor support performance with focused, interactive analytics.</p>
+    hero_html = f"""
+    <div class="hero-wrapper">
+        <div class="hero-copy">
+            <span class="hero-kicker">Operations Pulse</span>
+            <h1>Ticket Command Center</h1>
+            <p>{data_line} Dive into queue performance, resolution velocity, and workload distribution from a single view.</p>
+            <div class="hero-pills">
+                <span class="hero-pill">{active_line}</span>
+                <span class="hero-pill">{stored_line}</span>
+                <span class="hero-pill">{source_line}</span>
+                <span class="hero-pill">{closed_ratio}% closure rate</span>
+            </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div class="hero-visual">
+            <div class="hero-orb">
+                <span class="hero-orb__label">Tickets in focus</span>
+                <span class="hero-orb__value">{record_count:,}</span>
+                <span class="hero-orb__meta">Insights refreshed from {source_line.lower()}.</span>
+            </div>
+        </div>
+    </div>
+    """
 
-    badge_entries = []
-    if included:
-        badge_entries.append((f"{included} active", "secondary"))
-    else:
-        badge_entries.append(("No active datasets", "outline"))
-
-    if total:
-        badge_entries.append((f"{total} stored", "default"))
-
-    badge_entries.append(
-        (
-            "Supabase live" if bundle.source == "supabase" else "Local fallback",
-            "default" if bundle.source == "supabase" else "destructive",
-        )
-    )
-
-    ui.card(
-        title="Workspace status",
-        content=data_line,
-        key="hero-summary-card",
-    ).render()
-
-    ui.badges(badge_entries, class_name="status-badge-container", key="hero-badges")
+    st.markdown(hero_html, unsafe_allow_html=True)
 
 
 def dataset_management_panel(bundle: DatasetLoadResult) -> None:
@@ -527,6 +931,7 @@ def _render_dataset_row(name: str) -> None:
         unsafe_allow_html=True,
     )
 
+    st.markdown("<div class='dataset-controls'>", unsafe_allow_html=True)
     include_col, delete_col = st.columns([1.3, 1])
 
     with include_col:
@@ -544,10 +949,13 @@ def _render_dataset_row(name: str) -> None:
             key=delete_key,
         )
 
+    st.markdown("</div>", unsafe_allow_html=True)
+
     if include_state != meta.included:
         previous = meta.included
         meta.included = include_state
         if _persist_registry(registry):
+            st.session_state[include_key] = include_state
             st.sidebar.info(
                 f"{'Included' if include_state else 'Excluded'} '{name}' in analytics."
             )
@@ -570,14 +978,6 @@ def _render_dataset_row(name: str) -> None:
             else:
                 if removed_meta is not None:
                     registry[name] = removed_meta
-
-
-def _sanitize_key(*parts: str) -> str:
-    safe_parts = []
-    for part in parts:
-        safe = re.sub(r"[^0-9A-Za-z]+", "_", str(part))
-        safe_parts.append(safe.strip("_"))
-    return "_".join(safe_parts)
 
 
 def _checkbox_filter(expander_label: str, column: str, df: pd.DataFrame) -> list[str]:
@@ -666,46 +1066,62 @@ def kpi_section(filtered: pd.DataFrame):
     avg_days_open = filtered["Days Open"].mean()
     latest_activity = filtered["Last Change Date"].max()
 
-    cols = st.columns(4, gap="large")
+    avg_days_display = f"{avg_days_open:.1f}d" if pd.notna(avg_days_open) else "—"
+    latest_activity_display = (
+        latest_activity.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_activity) else "—"
+    )
     metric_data = [
         {
-            "title": "Tickets",
-            "value": f"{total_tickets}",
-            "description": "Total records in view",
-            "key": "metric-total",
+            "title": "Tickets in view",
+            "value": f"{total_tickets:,}",
+            "description": "Records after filters",
+            "icon": "🛰️",
+            "accent": "rgba(156, 122, 255, 0.65)",
+            "soft": "rgba(156, 122, 255, 0.2)",
+            "border": "rgba(183, 158, 255, 0.45)",
         },
         {
-            "title": "Open tickets",
-            "value": f"{open_tickets}",
-            "description": "Active cases",
-            "key": "metric-open",
+            "title": "Active load",
+            "value": f"{open_tickets:,}",
+            "description": "Still awaiting closure",
+            "icon": "📡",
+            "accent": "rgba(76, 201, 240, 0.65)",
+            "soft": "rgba(76, 201, 240, 0.2)",
+            "border": "rgba(96, 224, 255, 0.45)",
         },
         {
             "title": "Avg days open",
-            "value": f"{avg_days_open:.2f}" if pd.notna(avg_days_open) else "—",
-            "description": "Mean lifetime",
-            "key": "metric-days",
+            "value": avg_days_display,
+            "description": "Mean time to resolve",
+            "icon": "⏱️",
+            "accent": "rgba(255, 193, 96, 0.65)",
+            "soft": "rgba(255, 193, 96, 0.18)",
+            "border": "rgba(255, 210, 140, 0.45)",
         },
         {
             "title": "Last update",
-            "value": (
-                latest_activity.strftime("%Y-%m-%d %H:%M")
-                if pd.notna(latest_activity)
-                else "—"
-            ),
-            "description": "Most recent change",
-            "key": "metric-latest",
+            "value": latest_activity_display,
+            "description": "Most recent ticket touch",
+            "icon": "🕒",
+            "accent": "rgba(255, 135, 199, 0.65)",
+            "soft": "rgba(255, 135, 199, 0.18)",
+            "border": "rgba(255, 160, 210, 0.45)",
         },
     ]
 
-    for col, spec in zip(cols, metric_data):
-        with col:
-            ui.metric_card(
-                title=spec["title"],
-                content=spec["value"],
-                description=spec["description"],
-                key=spec["key"],
-            )
+    cards_html = "".join(
+        (
+            f"<div class=\"metric-card\" style=\"--metric-accent: {spec['accent']}; --metric-soft: {spec['soft']}; --metric-border: {spec['border']};\">"
+            f"<div class=\"metric-icon\">{spec['icon']}</div>"
+            f"<div class=\"metric-label\">{spec['title']}</div>"
+            f"<div class=\"metric-value\">{spec['value']}</div>"
+            f"<div class=\"metric-caption\">{spec['description']}</div>"
+            "</div>"
+        )
+        for spec in metric_data
+    )
+
+    st.markdown(f"<div class='metric-grid'>{cards_html}</div>", unsafe_allow_html=True)
 
 
 def _queue_chart(data: pd.DataFrame, chart_type: str):
@@ -846,42 +1262,81 @@ def build_charts(filtered: pd.DataFrame):
         .reset_index(name="Tickets")
     )
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="large")
     with col1:
-        queue_chart_type = ui.tabs(
-            options=["Bar", "Pie"],
-            default_value="Bar",
-            key="queue_chart_type",
-        )
+        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
+        header_cols = st.columns([1, 1])
+        with header_cols[0]:
+            st.markdown(
+                "<div class='chart-card__title'>Tickets by queue</div>",
+                unsafe_allow_html=True,
+            )
+        with header_cols[1]:
+            queue_chart_type = ui.tabs(
+                options=["Bar", "Pie"],
+                default_value="Bar",
+                key="queue_chart_type",
+            )
         st.altair_chart(
             _queue_chart(tickets_by_queue, queue_chart_type), use_container_width=True
         )
-        category_chart_type = ui.tabs(
-            options=["Bar", "Pie"],
-            default_value="Bar",
-            key="category_chart_type",
-        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
+        header_cols = st.columns([1, 1])
+        with header_cols[0]:
+            st.markdown(
+                "<div class='chart-card__title'>Top categories</div>",
+                unsafe_allow_html=True,
+            )
+        with header_cols[1]:
+            category_chart_type = ui.tabs(
+                options=["Bar", "Pie"],
+                default_value="Bar",
+                key="category_chart_type",
+            )
         st.altair_chart(
             _category_chart(tickets_by_category, category_chart_type),
             use_container_width=True,
         )
+        st.markdown("</div>", unsafe_allow_html=True)
+
     with col2:
-        status_chart_type = ui.tabs(
-            options=["Bar", "Pie"],
-            default_value="Bar",
-            key="status_chart_type",
-        )
+        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
+        header_cols = st.columns([1, 1])
+        with header_cols[0]:
+            st.markdown(
+                "<div class='chart-card__title'>Tickets by status</div>",
+                unsafe_allow_html=True,
+            )
+        with header_cols[1]:
+            status_chart_type = ui.tabs(
+                options=["Bar", "Pie"],
+                default_value="Bar",
+                key="status_chart_type",
+            )
         st.altair_chart(
             _status_chart(tickets_by_status, status_chart_type), use_container_width=True
         )
-        trend_chart_type = ui.tabs(
-            options=["Line", "Bar", "Area"],
-            default_value="Line",
-            key="trend_chart_type",
-        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
+        header_cols = st.columns([1, 1])
+        with header_cols[0]:
+            st.markdown(
+                "<div class='chart-card__title'>Tickets opened per day</div>",
+                unsafe_allow_html=True,
+            )
+        with header_cols[1]:
+            trend_chart_type = ui.tabs(
+                options=["Line", "Bar", "Area"],
+                default_value="Line",
+                key="trend_chart_type",
+            )
         st.altair_chart(
             _trend_chart(tickets_over_time, trend_chart_type), use_container_width=True
         )
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def insights_report(df: pd.DataFrame):
@@ -895,40 +1350,44 @@ def insights_report(df: pd.DataFrame):
     long_running = df[df["Days Open"] > 4]
     customer_waiting = status_counts.get("With customer", 0)
     closed_share = df["Is Closed"].mean() * 100 if total else 0
+    resolution_days = df["Resolution Time Days"].mean()
 
     insights = []
     if not queue_counts.empty:
         top_queue = queue_counts.index[0]
         top_queue_share = queue_counts.iloc[0] / total * 100
         insights.append(
-            f"{top_queue} handles {queue_counts.iloc[0]} of {total} tickets "
-            f"({top_queue_share:.0f}% of workload), making it the main pressure point."
+            f"<strong>{top_queue}</strong> is handling {queue_counts.iloc[0]} of {total} tickets "
+            f"({top_queue_share:.0f}% of workload), marking it as the primary pressure point."
         )
     if not category_counts.empty:
         top_category = category_counts.index[0]
         insights.append(
-            f"'{top_category}' is the dominant category with {category_counts.iloc[0]} tickets, "
-            "suggesting this issue type needs focused remediation."
+            f"Category <strong>{top_category}</strong> leads with {category_counts.iloc[0]} issues; consider reinforcing knowledge articles around it."
         )
     if pd.notna(avg_days_open):
         insights.append(
-            f"Tickets stay active for {avg_days_open:.2f} days on average, "
-            f"with {len(long_running)} cases open for more than four days."
+            f"Tickets stay active for <strong>{avg_days_open:.1f} days</strong> on average, with {len(long_running)} cases breaching the four-day mark."
+        )
+    if pd.notna(resolution_days):
+        insights.append(
+            f"Closed cases resolve in approximately <strong>{resolution_days:.1f} days</strong>, highlighting room to compress hand-offs."
         )
     insights.append(
-        f"{closed_share:.0f}% of tickets are closed; {customer_waiting} are waiting on customers, "
-        "highlighting follow-up opportunities."
+        f"{closed_share:.0f}% of tickets are closed while {customer_waiting} await customer input — follow-ups could unlock extra wins."
     )
     insights.append(
-        "All tickets are logged as medium priority, indicating the triage process may not be using the full priority range."
+        "All tickets are currently logged as medium priority, suggesting the triage process could benefit from a wider priority spread."
     )
 
-    insights_body = "<br>".join(f"• {item}" for item in insights)
-    ui.card(
-        title="Key takeaways",
-        content=insights_body,
-        key="insights-card",
-    ).render()
+    if not insights:
+        insights.append("No actionable insights available yet — add data to unlock trends.")
+
+    insight_list = "".join(f"<li>{item}</li>" for item in insights)
+    st.markdown(
+        f"<div class='insight-card'><h4>Key takeaways</h4><ul>{insight_list}</ul></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def main():
