@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple
 import altair as alt
 import pandas as pd
 import streamlit as st
+import streamlit_shadcn_ui as ui
 
 from supabase_utils import (
     DatasetMeta,
@@ -53,6 +54,134 @@ EXPECTED_COLUMNS = [
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2MB
 
+
+def _inject_theme() -> None:
+    st.markdown(
+        """
+        <style>
+            :root {
+                --ticket-purple-500: #6b46ff;
+                --ticket-purple-400: #7f5bff;
+                --ticket-purple-200: #e3d8ff;
+                --ticket-purple-50: #f6f2ff;
+                --ticket-surface: rgba(19, 16, 40, 0.75);
+            }
+
+            .stApp {
+                background: radial-gradient(circle at 0% 0%, rgba(123, 97, 255, 0.18), transparent 40%),
+                            radial-gradient(circle at 100% 0%, rgba(106, 76, 255, 0.25), transparent 35%),
+                            #0f0b22;
+                color: #f7f5ff;
+            }
+
+            .purple-hero-card {
+                background: linear-gradient(135deg, rgba(107, 70, 255, 0.88), rgba(40, 18, 98, 0.95));
+                border-radius: 24px;
+                padding: 28px;
+                box-shadow: 0 20px 45px rgba(31, 18, 77, 0.45);
+                color: #fdfdff;
+                margin-bottom: 1.5rem;
+            }
+
+            .purple-hero-card h1 {
+                font-size: 2.1rem;
+                font-weight: 700;
+                margin-bottom: 0.3rem;
+            }
+
+            .purple-hero-card p {
+                font-size: 1rem;
+                opacity: 0.92;
+            }
+
+            .status-badge-container {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                margin: 0.75rem 0 0;
+            }
+
+            .sidebar-section-title {
+                font-weight: 600;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                font-size: 0.8rem;
+                color: #d7cfff;
+                margin-top: 1.2rem;
+            }
+
+            .dataset-card {
+                border-radius: 16px;
+                background: rgba(27, 23, 50, 0.72);
+                border: 1px solid rgba(123, 97, 255, 0.25);
+                padding: 1rem;
+                margin-bottom: 0.9rem;
+                box-shadow: 0 10px 26px rgba(17, 8, 52, 0.35);
+            }
+
+            .dataset-card h4 {
+                margin-bottom: 0.25rem;
+                font-size: 1rem;
+            }
+
+            .dataset-meta {
+                font-size: 0.78rem;
+                opacity: 0.7;
+                margin-bottom: 0.6rem;
+            }
+
+            .stDataFrame {
+                background: rgba(19, 16, 40, 0.68);
+                border-radius: 18px;
+                border: 1px solid rgba(108, 90, 255, 0.35);
+            }
+
+            .stDataFrame [data-testid="stTable"] {
+                background: transparent;
+            }
+
+            .section-title {
+                font-size: 1.4rem;
+                margin-top: 1.2rem;
+                margin-bottom: 0.4rem;
+                color: #efe9ff;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _sync_session_registry(registry: Dict[str, DatasetMeta]) -> None:
+    current: Dict[str, DatasetMeta] = st.session_state.get("dataset_registry", {})
+    needs_refresh = False
+
+    if len(current) != len(registry):
+        needs_refresh = True
+    else:
+        for name, meta in registry.items():
+            existing = current.get(name)
+            if not isinstance(existing, DatasetMeta):
+                needs_refresh = True
+                break
+            if (
+                existing.included != meta.included
+                or existing.disabled != meta.disabled
+                or existing.uploaded_at != meta.uploaded_at
+            ):
+                needs_refresh = True
+                break
+
+    if needs_refresh:
+        st.session_state["dataset_registry"] = {
+            name: DatasetMeta(
+                name=meta.name,
+                included=meta.included,
+                disabled=meta.disabled,
+                uploaded_at=meta.uploaded_at,
+            )
+            for name, meta in registry.items()
+        }
 def _trigger_rerun() -> None:
     if hasattr(st, "rerun"):
         st.rerun()
@@ -255,9 +384,54 @@ def _format_uploaded_at(meta: DatasetMeta) -> str:
         return iso_value
 
 
+def _render_header(bundle: DatasetLoadResult) -> None:
+    included = sum(1 for meta in bundle.registry.values() if meta.included)
+    total = len(bundle.registry)
+    record_count = len(bundle.combined)
+    data_line = (
+        f"{record_count:,} tickets across {included} active dataset{'s' if included != 1 else ''}."
+        if included
+        else "Activate a dataset to populate insights."
+    )
+
+    st.markdown(
+        """
+        <div class="purple-hero-card">
+            <h1>Ticket Analysis Dashboard</h1>
+            <p>Monitor support performance with focused, interactive analytics.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    badge_entries = []
+    if included:
+        badge_entries.append((f"{included} active", "secondary"))
+    else:
+        badge_entries.append(("No active datasets", "outline"))
+
+    if total:
+        badge_entries.append((f"{total} stored", "default"))
+
+    badge_entries.append(
+        (
+            "Supabase live" if bundle.source == "supabase" else "Local fallback",
+            "default" if bundle.source == "supabase" else "destructive",
+        )
+    )
+
+    ui.card(
+        title="Workspace status",
+        content=data_line,
+        key="hero-summary-card",
+    ).render()
+
+    ui.badges(badge_entries, class_name="status-badge-container", key="hero-badges")
+
+
 def dataset_management_panel(bundle: DatasetLoadResult) -> None:
     with st.sidebar:
-        st.subheader("Datasets")
+        st.markdown("<div class='sidebar-section-title'>Datasets</div>", unsafe_allow_html=True)
 
         if bundle.source == "local":
             st.warning(
@@ -311,13 +485,22 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
                             _trigger_rerun()
 
         if not registry_state:
-            st.caption("No datasets stored yet. Upload a CSV to begin.")
+            ui.alert(
+                title="No datasets yet",
+                description="Upload a CSV to start analysing tickets.",
+                key="dataset-empty-alert",
+            )
             return
 
         for name in sorted(registry_state.keys()):
             _render_dataset_row(name)
+
         if not any(meta.included for meta in registry_state.values()):
-            st.info("All datasets are excluded. Tick 'Include' next to a CSV or upload a new file.")
+            ui.alert(
+                title="All datasets excluded",
+                description="Enable at least one CSV to populate the dashboard.",
+                key="dataset-excluded-alert",
+            )
 
 
 def _render_dataset_row(name: str) -> None:
@@ -326,34 +509,40 @@ def _render_dataset_row(name: str) -> None:
     if not meta:
         return
 
-    container = st.container()
-    container.markdown(f"**{name}**")
-
-    status_bits = ["Included" if meta.included else "Excluded"]
-
-    uploaded_label = _format_uploaded_at(meta)
-    if uploaded_label:
-        status_bits.append(uploaded_label)
-
-    container.caption(" · ".join(status_bits))
-
     include_key = _sanitize_key("dataset", name, "include")
     delete_key = _sanitize_key("dataset", name, "delete")
     legacy_disable_key = _sanitize_key("dataset", name, "disable")
 
-    if include_key not in st.session_state:
-        st.session_state[include_key] = meta.included
     if legacy_disable_key in st.session_state:
         st.session_state.pop(legacy_disable_key, None)
     meta.disabled = False
 
-    include_col, delete_col = container.columns([1.5, 0.8])
+    uploaded_label = _format_uploaded_at(meta)
+    status_bits = ["Included" if meta.included else "Excluded"]
+    if uploaded_label:
+        status_bits.append(uploaded_label)
 
-    include_state = include_col.checkbox(
-        "Include",
-        key=include_key,
+    st.markdown(
+        f"<div class='dataset-card'><h4>{name}</h4><div class='dataset-meta'>{' · '.join(status_bits)}</div></div>",
+        unsafe_allow_html=True,
     )
-    delete_clicked = delete_col.button("Delete", key=delete_key)
+
+    include_col, delete_col = st.columns([1.3, 1])
+
+    with include_col:
+        include_state = ui.switch(
+            default_checked=meta.included,
+            label="Include in dashboard",
+            key=include_key,
+        )
+
+    with delete_col:
+        delete_clicked = ui.button(
+            text="Delete",
+            variant="destructive",
+            class_name="w-full",
+            key=delete_key,
+        )
 
     if include_state != meta.included:
         previous = meta.included
@@ -366,8 +555,6 @@ def _render_dataset_row(name: str) -> None:
             _trigger_rerun()
         else:
             meta.included = previous
-            st.session_state[include_key] = previous
-
     if delete_clicked:
         try:
             delete_object(name)
@@ -417,7 +604,9 @@ def _checkbox_filter(expander_label: str, column: str, df: pd.DataFrame) -> list
 
 
 def build_filters(df: pd.DataFrame) -> pd.DataFrame:
-    st.sidebar.title("Filters")
+    st.sidebar.markdown(
+        "<div class='sidebar-section-title'>Filters</div>", unsafe_allow_html=True
+    )
 
     queue_selection = _checkbox_filter("Assigned Queue", "Assigned To Queue", df)
     status_selection = _checkbox_filter("Ticket Status", "Status", df)
@@ -477,19 +666,46 @@ def kpi_section(filtered: pd.DataFrame):
     avg_days_open = filtered["Days Open"].mean()
     latest_activity = filtered["Last Change Date"].max()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Tickets", f"{total_tickets}")
-    col2.metric("Open tickets", f"{open_tickets}")
-    col3.metric(
-        "Avg days open",
-        f"{avg_days_open:.2f}" if pd.notna(avg_days_open) else "—",
-    )
-    col4.metric(
-        "Last update",
-        latest_activity.strftime("%Y-%m-%d %H:%M")
-        if pd.notna(latest_activity)
-        else "—",
-    )
+    cols = st.columns(4, gap="large")
+    metric_data = [
+        {
+            "title": "Tickets",
+            "value": f"{total_tickets}",
+            "description": "Total records in view",
+            "key": "metric-total",
+        },
+        {
+            "title": "Open tickets",
+            "value": f"{open_tickets}",
+            "description": "Active cases",
+            "key": "metric-open",
+        },
+        {
+            "title": "Avg days open",
+            "value": f"{avg_days_open:.2f}" if pd.notna(avg_days_open) else "—",
+            "description": "Mean lifetime",
+            "key": "metric-days",
+        },
+        {
+            "title": "Last update",
+            "value": (
+                latest_activity.strftime("%Y-%m-%d %H:%M")
+                if pd.notna(latest_activity)
+                else "—"
+            ),
+            "description": "Most recent change",
+            "key": "metric-latest",
+        },
+    ]
+
+    for col, spec in zip(cols, metric_data):
+        with col:
+            ui.metric_card(
+                title=spec["title"],
+                content=spec["value"],
+                description=spec["description"],
+                key=spec["key"],
+            )
 
 
 def _queue_chart(data: pd.DataFrame, chart_type: str):
@@ -598,7 +814,11 @@ def _trend_chart(data: pd.DataFrame, chart_type: str):
 
 def build_charts(filtered: pd.DataFrame):
     if filtered.empty:
-        st.warning("No records match the current filters.")
+        ui.alert(
+            title="No records",
+            description="Refine or clear filters to visualise tickets.",
+            key="charts-empty-alert",
+        )
         return
 
     tickets_by_queue = (
@@ -628,21 +848,17 @@ def build_charts(filtered: pd.DataFrame):
 
     col1, col2 = st.columns(2)
     with col1:
-        queue_chart_type = st.radio(
-            "Queue chart",
+        queue_chart_type = ui.tabs(
             options=["Bar", "Pie"],
-            index=0,
-            horizontal=True,
+            default_value="Bar",
             key="queue_chart_type",
         )
         st.altair_chart(
             _queue_chart(tickets_by_queue, queue_chart_type), use_container_width=True
         )
-        category_chart_type = st.radio(
-            "Category chart",
+        category_chart_type = ui.tabs(
             options=["Bar", "Pie"],
-            index=0,
-            horizontal=True,
+            default_value="Bar",
             key="category_chart_type",
         )
         st.altair_chart(
@@ -650,21 +866,17 @@ def build_charts(filtered: pd.DataFrame):
             use_container_width=True,
         )
     with col2:
-        status_chart_type = st.radio(
-            "Status chart",
+        status_chart_type = ui.tabs(
             options=["Bar", "Pie"],
-            index=0,
-            horizontal=True,
+            default_value="Bar",
             key="status_chart_type",
         )
         st.altair_chart(
             _status_chart(tickets_by_status, status_chart_type), use_container_width=True
         )
-        trend_chart_type = st.radio(
-            "Trend chart",
+        trend_chart_type = ui.tabs(
             options=["Line", "Bar", "Area"],
-            index=0,
-            horizontal=True,
+            default_value="Line",
             key="trend_chart_type",
         )
         st.altair_chart(
@@ -673,7 +885,7 @@ def build_charts(filtered: pd.DataFrame):
 
 
 def insights_report(df: pd.DataFrame):
-    st.subheader("Insights Report")
+    st.markdown("<div class='section-title'>Insights Report</div>", unsafe_allow_html=True)
 
     total = len(df)
     queue_counts = df["Assigned To Queue"].value_counts()
@@ -711,51 +923,58 @@ def insights_report(df: pd.DataFrame):
         "All tickets are logged as medium priority, indicating the triage process may not be using the full priority range."
     )
 
-    st.markdown("\n".join(f"- {item}" for item in insights))
+    insights_body = "<br>".join(f"• {item}" for item in insights)
+    ui.card(
+        title="Key takeaways",
+        content=insights_body,
+        key="insights-card",
+    ).render()
 
 
 def main():
     st.set_page_config(page_title="Ticket Analysis Dashboard", layout="wide")
-    st.title("Ticket Analysis Dashboard")
-    st.caption("Interact with the filters to explore ticket workload and performance.")
+    _inject_theme()
 
     cache_bust = st.session_state.get("dataset_cache_bust", 0)
     bundle = load_dataset_bundle(cache_bust)
 
-    st.session_state["dataset_registry"] = {
-        name: DatasetMeta(
-            name=meta.name,
-            included=meta.included,
-            disabled=meta.disabled,
-            uploaded_at=meta.uploaded_at,
-        )
-        for name, meta in bundle.registry.items()
-    }
+    _sync_session_registry(bundle.registry)
 
+    _render_header(bundle)
     dataset_management_panel(bundle)
 
     if bundle.source == "local":
-        st.warning(
-            "Supabase data unavailable. Loaded local CSV files from the app bundle."
+        ui.alert(
+            title="Offline mode",
+            description="Supabase unavailable. Loaded bundled CSV data instead.",
+            key="local-warning",
         )
     if bundle.errors:
-        for issue in bundle.errors:
-            st.warning(f"Dataset issue: {issue}")
+        for index, issue in enumerate(bundle.errors, start=1):
+            ui.alert(
+                title="Dataset issue",
+                description=issue,
+                key=f"dataset-issue-{index}",
+            )
 
     data = bundle.combined
     if data.empty:
-        st.error("No data to display. Use the Datasets panel to include an existing CSV or upload a new one.")
+        ui.alert(
+            title="No data to display",
+            description="Use the datasets sidebar to include an existing CSV or upload a new one.",
+            key="no-data-alert",
+        )
         return
 
     filtered = build_filters(data)
 
-    st.markdown("### Key Metrics")
+    st.markdown("<div class='section-title'>Key Metrics</div>", unsafe_allow_html=True)
     kpi_section(filtered)
 
-    st.markdown("### Ticket Overview")
+    st.markdown("<div class='section-title'>Ticket Overview</div>", unsafe_allow_html=True)
     build_charts(filtered)
 
-    st.markdown("### Ticket Details")
+    st.markdown("<div class='section-title'>Ticket Details</div>", unsafe_allow_html=True)
     st.dataframe(
         filtered[
             [

@@ -4,4 +4,5 @@ playwright>=1.40
 pytest>=7.4
 pytest-playwright>=0.4
 streamlit>=1.36
+streamlit-shadcn-ui>=0.1.19
 supabase>=2.4
