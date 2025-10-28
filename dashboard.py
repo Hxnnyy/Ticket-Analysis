@@ -571,7 +571,9 @@ def _sync_session_registry(registry: Dict[str, DatasetMeta]) -> None:
 
     for name, meta in registry.items():
         include_key = _sanitize_key("dataset", name, "include")
-        st.session_state[include_key] = meta.included
+        current_value = st.session_state.get(include_key)
+        if needs_refresh or not isinstance(current_value, bool):
+            st.session_state[include_key] = meta.included
 
     removed_names = current_names - set(registry.keys())
     for name in removed_names:
