@@ -156,13 +156,25 @@ def load_dataset_bundle(cache_bust: int = 0) -> DatasetLoadResult:
             continue
 
         stored_meta = metadata_map.get(name)
+        if stored_meta and not isinstance(stored_meta, DatasetMeta):
+            if hasattr(stored_meta, "to_dict"):
+                stored_meta = DatasetMeta.from_dict(name, stored_meta.to_dict())
+            elif isinstance(stored_meta, dict):
+                stored_meta = DatasetMeta.from_dict(name, stored_meta)
+            else:
+                stored_meta = None
         if not stored_meta:
             metadata_dirty = True
+        uploaded_at = (
+            stored_meta.uploaded_at
+            if stored_meta and stored_meta.uploaded_at
+            else obj.get("created_at")
+        )
         meta = DatasetMeta(
             name=name,
             included=stored_meta.included if stored_meta else True,
             disabled=stored_meta.disabled if stored_meta else False,
-            uploaded_at=stored_meta.uploaded_at or obj.get("created_at"),
+            uploaded_at=uploaded_at,
         )
         registry[name] = meta
 
