@@ -5,7 +5,6 @@ Run with: streamlit run dashboard.py
 """
 
 import io
-import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -24,6 +23,7 @@ from supabase_utils import (
     load_metadata,
     save_metadata,
     upload_csv,
+    supabase_disabled,
 )
 
 
@@ -119,7 +119,7 @@ def load_dataset_bundle(cache_bust: int = 0) -> DatasetLoadResult:
     included_frames: List[pd.DataFrame] = []
     source = "supabase"
 
-    if os.getenv("SUPABASE_DISABLE"):
+    if supabase_disabled():
         local_frames, combined = _load_local_data(DATA_DIR)
         registry = {name: DatasetMeta(name=name) for name in local_frames.keys()}
         return DatasetLoadResult(

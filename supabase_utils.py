@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
+try:
+    import streamlit as st
+except ImportError:  # pragma: no cover - streamlit not available during some tests
+    st = None
+
 from supabase import Client, create_client
 
 
-DEFAULT_SUPABASE_URL = "https://lkffiqvyrjtqptvjoksb.supabase.co"
-DEFAULT_SUPABASE_ANON_KEY = (
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrZmZpcXZ5cmp0cXB0dmpva3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MzE4NjUsImV4cCI6MjA3NzIwNzg2NX0.TVq7mhSJSGEuOw8A9x5UEyOGnnm8Y5S9PGnNEDbLhGE"
-)
 DEFAULT_SUPABASE_BUCKET = "ticket-csvs"
 DEFAULT_METADATA_OBJECT = "_dataset_registry.json"
 
@@ -49,21 +50,57 @@ class SupabaseConfigError(RuntimeError):
     """Raised when Supabase configuration is missing or invalid."""
 
 
-def _config_value(env_key: str, default: Optional[str]) -> str:
-    value = os.getenv(env_key, default)
-    if not value:
-        raise SupabaseConfigError(
-            f"Environment variable {env_key} is required for Supabase integration."
-        )
-    return value
+def _supabase_secrets() -> Dict[str, Any]:
+    if st is None:
+        return {}
+    try:
+        return dict(st.secrets.get("supabase", {}))
+    except Exception:
+        return {}
+
+
+def _config_value(env_key: str, secret_key: str, default: Optional[str] = None) -> str:
+    secrets = _supabase_secrets()
+    if secret_key in secrets and secrets[secret_key]:
+        return str(secrets[secret_key])
+
+    value = os.getenv(env_key)
+    if value:
+        return value
+
+    if default is not None:
+        return default
+
+    raise SupabaseConfigError(
+        f"Supabase configuration missing. Set environment variable {env_key} or add '{secret_key}' to st.secrets['supabase']."
+    )
+
+
+def _is_disabled() -> bool:
+    secrets = _supabase_secrets()
+    secret_value = secrets.get("disable")
+    if isinstance(secret_value, bool):
+        disable_flag = secret_value
+    elif isinstance(secret_value, str):
+        disable_flag = secret_value.lower() in {"1", "true", "yes"}
+    else:
+        disable_flag = False
+
+    if disable_flag:
+        return True
+
+    env_value = os.getenv("SUPABASE_DISABLE")
+    if env_value is None:
+        return False
+    return env_value.lower() in {"1", "true", "yes"}
 
 
 @lru_cache(maxsize=1)
 def get_client() -> Client:
     """Initialise and cache the Supabase client."""
 
-    url = _config_value("SUPABASE_URL", DEFAULT_SUPABASE_URL)
-    key = _config_value("SUPABASE_ANON_KEY", DEFAULT_SUPABASE_ANON_KEY)
+    url = _config_value("SUPABASE_URL", "url")
+    key = _config_value("SUPABASE_ANON_KEY", "anon_key")
     try:
         return create_client(url, key)
     except Exception as exc:
@@ -71,11 +108,13 @@ def get_client() -> Client:
 
 
 def get_bucket_name() -> str:
-    return _config_value("SUPABASE_BUCKET", DEFAULT_SUPABASE_BUCKET)
+    return _config_value("SUPABASE_BUCKET", "bucket", DEFAULT_SUPABASE_BUCKET)
 
 
 def get_metadata_path() -> str:
-    return os.getenv("SUPABASE_METADATA_OBJECT", DEFAULT_METADATA_OBJECT)
+    return _config_value(
+        "SUPABASE_METADATA_OBJECT", "metadata_object", DEFAULT_METADATA_OBJECT
+    )
 
 
 def list_csv_objects() -> List[Dict[str, Any]]:
@@ -134,12 +173,9 @@ def save_metadata(metadata: Dict[str, DatasetMeta]) -> None:
         "datasets": {name: meta.to_dict() for name, meta in metadata.items()}
     }
     data = json.dumps(payload, indent=2).encode("utf-8")
+    options = {"content-type": "application/json", "upsert": "true"}
     try:
-        client.storage.from_(bucket).upload(
-            path,
-            data,
-            {"contentType": "application/json", "upsert": True},
-        )
+        client.storage.from_(bucket).upload(path, data, options)
     except Exception as exc:
         raise RuntimeError("Failed to persist dataset metadata to Supabase storage") from exc
 
@@ -164,3 +200,7 @@ def delete_object(name: str) -> None:
         client.storage.from_(bucket).remove([name])
     except Exception as exc:
         raise RuntimeError(f"Failed to delete {name} from Supabase storage") from exc
+
+
+def supabase_disabled() -> bool:
+    return _is_disabled()
