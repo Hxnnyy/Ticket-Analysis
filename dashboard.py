@@ -53,6 +53,13 @@ EXPECTED_COLUMNS = [
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2MB
 
+def _trigger_rerun() -> None:
+    if hasattr(st, "rerun"):
+        st.rerun()
+    else:
+        st.experimental_rerun()
+
+
 def _prepare_ticket_frame(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df.columns = [col.strip() for col in df.columns]
@@ -163,8 +170,16 @@ def load_dataset_bundle(cache_bust: int = 0) -> DatasetLoadResult:
                 stored_meta = DatasetMeta.from_dict(name, stored_meta)
             else:
                 stored_meta = None
+
         if not stored_meta:
             metadata_dirty = True
+            stored_included = True
+        else:
+            stored_included = bool(stored_meta.included)
+            if getattr(stored_meta, "disabled", False):
+                stored_included = False
+                metadata_dirty = True
+
         uploaded_at = (
             stored_meta.uploaded_at
             if stored_meta and stored_meta.uploaded_at
@@ -172,8 +187,8 @@ def load_dataset_bundle(cache_bust: int = 0) -> DatasetLoadResult:
         )
         meta = DatasetMeta(
             name=name,
-            included=stored_meta.included if stored_meta else True,
-            disabled=stored_meta.disabled if stored_meta else False,
+            included=stored_included,
+            disabled=False,
             uploaded_at=uploaded_at,
         )
         registry[name] = meta
@@ -184,7 +199,7 @@ def load_dataset_bundle(cache_bust: int = 0) -> DatasetLoadResult:
             raw["Source File"] = name
             prepared = _prepare_ticket_frame(raw)
             frames[name] = prepared
-            if meta.included and not meta.disabled:
+            if meta.included:
                 included_frames.append(prepared)
         except Exception as exc:
             errors.append(f"{name}: {exc}")
@@ -293,7 +308,7 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
                             st.session_state["dataset_registry"] = registry
                             st.success(f"Uploaded '{name}'.")
                             _invalidate_dataset_cache()
-                            st.experimental_rerun()
+                            _trigger_rerun()
 
         if not registry_state:
             st.caption("No datasets stored yet. Upload a CSV to begin.")
@@ -301,6 +316,8 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
 
         for name in sorted(registry_state.keys()):
             _render_dataset_row(name)
+        if not any(meta.included for meta in registry_state.values()):
+            st.info("All datasets are excluded. Tick 'Include' next to a CSV or upload a new file.")
 
 
 def _render_dataset_row(name: str) -> None:
@@ -312,13 +329,7 @@ def _render_dataset_row(name: str) -> None:
     container = st.container()
     container.markdown(f"**{name}**")
 
-    status_bits = []
-    if meta.disabled:
-        status_bits.append("Disabled")
-    elif meta.included:
-        status_bits.append("Included")
-    else:
-        status_bits.append("Excluded")
+    status_bits = ["Included" if meta.included else "Excluded"]
 
     uploaded_label = _format_uploaded_at(meta)
     if uploaded_label:
@@ -327,28 +338,24 @@ def _render_dataset_row(name: str) -> None:
     container.caption(" · ".join(status_bits))
 
     include_key = _sanitize_key("dataset", name, "include")
-    disable_key = _sanitize_key("dataset", name, "disable")
     delete_key = _sanitize_key("dataset", name, "delete")
+    legacy_disable_key = _sanitize_key("dataset", name, "disable")
 
-    if st.session_state.get(include_key) != meta.included:
+    if include_key not in st.session_state:
         st.session_state[include_key] = meta.included
-    if st.session_state.get(disable_key) != meta.disabled:
-        st.session_state[disable_key] = meta.disabled
+    if legacy_disable_key in st.session_state:
+        st.session_state.pop(legacy_disable_key, None)
+    meta.disabled = False
 
-    include_col, disable_col, delete_col = container.columns([1.2, 1, 0.9])
+    include_col, delete_col = container.columns([1.5, 0.8])
 
     include_state = include_col.checkbox(
         "Include",
         key=include_key,
-        disabled=meta.disabled,
-    )
-    disable_state = disable_col.checkbox(
-        "Disable",
-        key=disable_key,
     )
     delete_clicked = delete_col.button("Delete", key=delete_key)
 
-    if not meta.disabled and include_state != meta.included:
+    if include_state != meta.included:
         previous = meta.included
         meta.included = include_state
         if _persist_registry(registry):
@@ -356,22 +363,10 @@ def _render_dataset_row(name: str) -> None:
                 f"{'Included' if include_state else 'Excluded'} '{name}' in analytics."
             )
             _invalidate_dataset_cache()
-            st.experimental_rerun()
+            _trigger_rerun()
         else:
             meta.included = previous
             st.session_state[include_key] = previous
-
-    if disable_state != meta.disabled:
-        previous_disabled = meta.disabled
-        meta.disabled = disable_state
-        if _persist_registry(registry):
-            action = "Disabled" if disable_state else "Re-enabled"
-            st.sidebar.info(f"{action} '{name}'.")
-            _invalidate_dataset_cache()
-            st.experimental_rerun()
-        else:
-            meta.disabled = previous_disabled
-            st.session_state[disable_key] = previous_disabled
 
     if delete_clicked:
         try:
@@ -381,11 +376,10 @@ def _render_dataset_row(name: str) -> None:
         else:
             removed_meta = registry.pop(name, None)
             if _persist_registry(registry):
-                for key in (include_key, disable_key):
-                    st.session_state.pop(key, None)
+                st.session_state.pop(include_key, None)
                 st.sidebar.success(f"Deleted '{name}'.")
                 _invalidate_dataset_cache()
-                st.experimental_rerun()
+                _trigger_rerun()
             else:
                 if removed_meta is not None:
                     registry[name] = removed_meta
@@ -400,7 +394,8 @@ def _sanitize_key(*parts: str) -> str:
 
 
 def _checkbox_filter(expander_label: str, column: str, df: pd.DataFrame) -> list[str]:
-    options = sorted(df[column].dropna().unique())
+    raw_options = [value for value in df[column].dropna().unique()]
+    options = sorted(raw_options, key=lambda value: str(value).lower())
     included_values: list[str] = []
 
     with st.sidebar.expander(expander_label, expanded=False):
@@ -749,7 +744,8 @@ def main():
 
     data = bundle.combined
     if data.empty:
-        st.info("No datasets are currently included. Upload a CSV to get started.")
+        st.error("No data to display. Use the Datasets panel to include an existing CSV or upload a new one.")
+        return
 
     filtered = build_filters(data)
 
