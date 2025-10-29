@@ -60,38 +60,26 @@ def _inject_theme() -> None:
         """
         <style>
             :root {
-                --ticket-purple-980: #03000a;
                 --ticket-purple-950: #05010f;
                 --ticket-purple-900: #0d0720;
-                --ticket-purple-850: #110a26;
                 --ticket-purple-800: #130b2f;
                 --ticket-purple-700: #6b46ff;
                 --ticket-purple-500: #9c7aff;
                 --ticket-purple-300: #c0b0ff;
                 --ticket-ink-100: rgba(241, 237, 255, 0.82);
-                --ticket-ink-60: rgba(241, 237, 255, 0.6);
-                --ticket-card-border: rgba(148, 124, 255, 0.38);
             }
 
             .stApp {
-                background:
-                    radial-gradient(120% 120% at -10% -20%, rgba(149, 110, 255, 0.18), transparent 55%),
-                    radial-gradient(110% 110% at 110% -30%, rgba(63, 39, 194, 0.32), transparent 60%),
-                    linear-gradient(180deg, #05010f 0%, #0d0720 55%, #120b2b 100%);
+                background: radial-gradient(120% 120% at 0% 0%, rgba(149, 110, 255, 0.16), transparent 45%),
+                            radial-gradient(100% 120% at 100% 0%, rgba(85, 53, 214, 0.26), transparent 55%),
+                            linear-gradient(180deg, #060313 0%, #0d0720 55%, #120b2b 100%);
                 color: #f4f1ff;
                 font-family: 'Inter', sans-serif;
             }
 
-            body {
-                background: #03000a;
-            }
-
             .stApp header {
-                background: linear-gradient(90deg, rgba(12, 6, 32, 0.8), rgba(17, 11, 40, 0.4));
-                backdrop-filter: blur(16px);
-                border-bottom: 1px solid rgba(121, 102, 232, 0.24);
+                background: transparent;
             }
-
 
             .stApp [data-testid="stToolbar"] {
                 display: none;
@@ -99,81 +87,29 @@ def _inject_theme() -> None:
 
             main.stAppViewContainer > .main,
             .stApp main .block-container {
-                padding-top: 2.8rem;
-                padding-bottom: 2.4rem;
-                padding-left: 2.4rem;
-                padding-right: 2.4rem;
-                max-width: 1180px;
-                margin: 0 auto;
+                padding-top: 2.4rem;
+                padding-bottom: 2rem;
             }
 
             .section-title {
-                font-size: 1.3rem;
-                letter-spacing: 0.08em;
-                margin: 2.4rem 0 1.2rem;
+                font-size: 1.35rem;
+                letter-spacing: 0.01em;
+                margin: 2.2rem 0 1rem;
                 color: #f1edff;
-                text-transform: uppercase;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.75rem;
-                position: relative;
-            }
-
-            .section-title::before {
-                content: '';
-                width: 42px;
-                height: 2px;
-                border-radius: 999px;
-                background: linear-gradient(90deg, rgba(121, 102, 232, 0), rgba(180, 165, 255, 0.75));
             }
 
             [data-testid="stSidebar"] {
-                background: linear-gradient(200deg, rgba(28, 19, 72, 0.92) 0%, rgba(12, 7, 32, 0.95) 80%);
-                border-right: 1px solid var(--ticket-card-border);
-                box-shadow: 16px 0 48px rgba(4, 2, 18, 0.65);
-                backdrop-filter: blur(26px);
-                width: 320px;
+                background: linear-gradient(200deg, rgba(33, 22, 78, 0.98) 0%, rgba(15, 10, 40, 0.98) 100%);
+                border-right: 1px solid rgba(146, 119, 255, 0.45);
+                box-shadow: 12px 0 40px rgba(5, 4, 20, 0.6);
             }
 
             [data-testid="stSidebar"] .block-container {
-                padding: 3rem 1.8rem 2.6rem;
+                padding: 2.8rem 1.6rem;
             }
 
             [data-testid="stSidebar"] * {
                 color: #eae4ff;
-            }
-
-            [data-testid="collapsedControl"] {
-                border-radius: 12px !important;
-                border: 1px solid rgba(146, 119, 255, 0.45) !important;
-                background: rgba(20, 13, 58, 0.9) !important;
-                box-shadow: 0 10px 28px rgba(3, 0, 20, 0.45) !important;
-                color: #f4f1ff !important;
-            }
-
-            @media (max-width: 900px) {
-                [data-testid="stSidebar"] {
-                    position: relative;
-                    top: auto;
-                    left: auto;
-                    bottom: auto;
-                    height: auto;
-                    width: 100% !important;
-                    min-width: 100% !important;
-                    max-width: 100% !important;
-                    display: block !important;
-                    flex: none !important;
-                    transform: none;
-                    z-index: auto;
-                    box-shadow: none;
-                    margin-bottom: 1.8rem;
-                    border-radius: 24px;
-                    border: 1px solid var(--ticket-card-border);
-                }
-
-                [data-testid="collapsedControl"] {
-                    display: none;
-                }
             }
 
             .sidebar-section-title {
@@ -198,16 +134,15 @@ def _inject_theme() -> None:
             .hero-wrapper {
                 position: relative;
                 overflow: hidden;
-                display: grid;
-                grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-                gap: 2.6rem;
-                align-items: center;
-                background: linear-gradient(135deg, #291a66, #100734);
-                border: 1px solid rgba(132, 111, 255, 0.4);
-                border-radius: 30px;
-                padding: 3rem 3.2rem;
-                box-shadow: 0 40px 70px rgba(8, 5, 26, 0.55);
-                margin-bottom: 2.6rem;
+                display: flex;
+                gap: 2.4rem;
+                align-items: stretch;
+                background: linear-gradient(135deg, rgba(33, 21, 79, 0.85), rgba(14, 7, 36, 0.92));
+                border: 1px solid rgba(132, 111, 255, 0.35);
+                border-radius: 28px;
+                padding: 2.5rem 2.7rem;
+                box-shadow: 0 32px 60px rgba(10, 6, 32, 0.55);
+                margin-bottom: 2.2rem;
             }
 
             .hero-wrapper::before,
@@ -215,26 +150,27 @@ def _inject_theme() -> None:
                 content: "";
                 position: absolute;
                 border-radius: 999px;
-                filter: blur(0.5px);
+                opacity: 0.35;
             }
 
             .hero-wrapper::before {
-                width: 340px;
-                height: 340px;
-                right: -140px;
-                top: -120px;
-                background: radial-gradient(circle, rgba(151, 129, 255, 0.6) 0%, transparent 72%);
+                width: 320px;
+                height: 320px;
+                right: -120px;
+                top: -80px;
+                background: radial-gradient(circle, rgba(151, 129, 255, 0.55) 0%, transparent 70%);
             }
 
             .hero-wrapper::after {
-                width: 280px;
-                height: 280px;
-                left: -160px;
-                bottom: -140px;
-                background: radial-gradient(circle, rgba(85, 59, 214, 0.6) 0%, transparent 75%);
+                width: 260px;
+                height: 260px;
+                left: -140px;
+                bottom: -120px;
+                background: radial-gradient(circle, rgba(85, 59, 214, 0.5) 0%, transparent 75%);
             }
 
             .hero-copy {
+                flex: 1 1 60%;
                 position: relative;
                 z-index: 2;
             }
@@ -242,58 +178,48 @@ def _inject_theme() -> None:
             .hero-kicker {
                 display: inline-flex;
                 align-items: center;
-                gap: 0.45rem;
-                padding: 0.32rem 0.9rem;
+                gap: 0.35rem;
+                padding: 0.28rem 0.7rem;
                 border-radius: 999px;
-                background: rgba(92, 70, 205, 0.25);
+                background: rgba(92, 70, 205, 0.35);
                 border: 1px solid rgba(153, 131, 255, 0.55);
-                font-size: 0.72rem;
+                font-size: 0.7rem;
                 text-transform: uppercase;
-                letter-spacing: 0.32em;
-                margin-bottom: 1.1rem;
+                letter-spacing: 0.22em;
+                margin-bottom: 0.9rem;
                 color: #dcd4ff;
             }
 
-            .hero-kicker::before {
-                content: '';
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #ffb7ff, #6b46ff);
-                box-shadow: 0 0 14px rgba(187, 161, 255, 0.8);
-            }
-
             .hero-copy h1 {
-                font-size: 2.6rem;
+                font-size: 2.3rem;
                 font-weight: 700;
-                margin: 0 0 0.8rem;
+                margin: 0 0 0.6rem;
                 color: #ffffff;
             }
 
             .hero-copy p {
                 margin: 0;
-                font-size: 1.05rem;
-                line-height: 1.7;
-                color: rgba(235, 231, 255, 0.82);
+                font-size: 1rem;
+                line-height: 1.6;
+                color: rgba(235, 231, 255, 0.85);
             }
 
             .hero-pills {
-                margin-top: 1.8rem;
+                margin-top: 1.6rem;
                 display: flex;
                 flex-wrap: wrap;
-                gap: 0.75rem;
+                gap: 0.65rem;
             }
 
             .hero-pill {
-                padding: 0.55rem 1.1rem;
+                padding: 0.55rem 0.9rem;
                 border-radius: 14px;
-                background: rgba(20, 15, 46, 0.7);
-                border: 1px solid rgba(146, 118, 255, 0.38);
-                font-size: 0.8rem;
+                background: rgba(20, 15, 46, 0.85);
+                border: 1px solid rgba(146, 118, 255, 0.35);
+                font-size: 0.78rem;
                 display: inline-flex;
                 align-items: center;
-                gap: 0.45rem;
-                letter-spacing: 0.05em;
+                gap: 0.4rem;
             }
 
             .hero-pill::before {
@@ -303,192 +229,70 @@ def _inject_theme() -> None:
                 line-height: 0;
             }
 
-            .hero-meta {
-                margin-top: 2rem;
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 1rem;
-            }
-
-            .hero-meta__item {
-                background: rgba(13, 9, 38, 0.6);
-                border: 1px solid rgba(146, 118, 255, 0.28);
-                border-radius: 14px;
-                padding: 0.75rem 1.1rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-
-            .hero-meta__label {
-                font-size: 0.75rem;
-                letter-spacing: 0.14em;
-                text-transform: uppercase;
-                color: rgba(220, 212, 255, 0.68);
-            }
-
-            .hero-meta__value {
-                font-size: 1.1rem;
-                font-weight: 600;
-                color: #f4f1ff;
-            }
-
             .hero-visual {
+                flex: 1 1 32%;
                 position: relative;
                 z-index: 2;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                flex-direction: column;
-                gap: 1.4rem;
-                min-height: 320px;
-            }
-
-            .hero-radar {
-                position: relative;
-                width: 260px;
-                height: 260px;
-                border-radius: 50%;
-                background: radial-gradient(circle, rgba(136, 112, 255, 0.3) 0%, rgba(29, 18, 74, 0.95) 70%);
-                border: 1px solid rgba(177, 161, 255, 0.5);
-                box-shadow: inset 0 0 50px rgba(230, 222, 255, 0.1);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-            }
-
-            .hero-radar::before,
-            .hero-radar::after {
-                content: "";
-                position: absolute;
-                border-radius: 50%;
-                border: 1px solid rgba(201, 189, 255, 0.2);
-                animation: heroPulse 8s ease-in-out infinite;
-            }
-
-            .hero-radar::before {
-                width: 90%;
-                height: 90%;
-                animation-delay: 0s;
-            }
-
-            .hero-radar::after {
-                width: 70%;
-                height: 70%;
-                animation-delay: 2.4s;
-            }
-
-            @keyframes heroPulse {
-                0%, 100% {
-                    transform: scale(0.92);
-                    opacity: 0.55;
-                }
-                50% {
-                    transform: scale(1);
-                    opacity: 0.85;
-                }
             }
 
             .hero-orb {
                 position: relative;
-                width: 190px;
-                height: 190px;
-                border-radius: 50%;
-                background: radial-gradient(circle at 30% 30%, rgba(230, 224, 255, 0.95), rgba(119, 90, 255, 0.45) 55%, rgba(40, 22, 88, 0.95));
-                border: 1px solid rgba(210, 198, 255, 0.6);
-                box-shadow: 0 25px 50px rgba(9, 5, 32, 0.5);
+                width: 260px;
+                height: 260px;
+                border-radius: 30px;
+                background: linear-gradient(135deg, rgba(141, 110, 255, 0.5), rgba(35, 18, 98, 0.95));
+                border: 1px solid rgba(177, 161, 255, 0.55);
+                box-shadow: inset 0 0 40px rgba(230, 222, 255, 0.08);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 gap: 0.6rem;
-                text-align: center;
+            }
+
+            .hero-orb::before,
+            .hero-orb::after {
+                content: "";
+                position: absolute;
+                border-radius: 999px;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.65), transparent 70%);
+                opacity: 0.22;
+            }
+
+            .hero-orb::before {
+                width: 160px;
+                height: 160px;
+                top: -60px;
+                left: 20px;
+            }
+
+            .hero-orb::after {
+                width: 140px;
+                height: 140px;
+                bottom: -50px;
+                right: 10px;
             }
 
             .hero-orb__label {
-                font-size: 0.72rem;
-                letter-spacing: 0.22em;
+                font-size: 0.75rem;
+                letter-spacing: 0.2em;
                 text-transform: uppercase;
-                color: rgba(60, 38, 108, 0.85);
+                color: rgba(232, 225, 255, 0.7);
             }
 
             .hero-orb__value {
-                font-size: 3rem;
+                font-size: 2.8rem;
                 font-weight: 700;
-                color: #2a145c;
-                text-shadow: 0 16px 36px rgba(27, 16, 74, 0.35);
+                color: #ffffff;
+                text-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
             }
 
             .hero-orb__meta {
-                font-size: 0.82rem;
-                color: rgba(36, 21, 66, 0.85);
-            }
-
-            .hero-radar__orbit {
-                position: absolute;
-                width: 110px;
-                height: 36px;
-                border-radius: 999px;
-                background: rgba(146, 118, 255, 0.16);
-                border: 1px solid rgba(146, 118, 255, 0.35);
-                filter: blur(0px);
-                backdrop-filter: blur(14px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.72rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: rgba(226, 220, 255, 0.8);
-            }
-
-            .hero-radar__orbit--top {
-                top: 18px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-
-            .hero-radar__orbit--bottom {
-                bottom: 18px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-
-            .hero-stat {
-                position: absolute;
-                display: flex;
-                flex-direction: column;
-                gap: 0.2rem;
-                padding: 0.85rem 1.1rem;
-                border-radius: 18px;
-                background: rgba(21, 14, 56, 0.86);
-                border: 1px solid rgba(146, 118, 255, 0.32);
-                box-shadow: 0 22px 40px rgba(7, 4, 26, 0.35);
-                min-width: 150px;
-            }
-
-            .hero-stat--active {
-                right: -6%;
-                top: 18%;
-            }
-
-            .hero-stat--closure {
-                right: -18%;
-                bottom: 12%;
-            }
-
-            .hero-stat__label {
-                font-size: 0.7rem;
-                letter-spacing: 0.18em;
-                text-transform: uppercase;
-                color: rgba(220, 212, 255, 0.65);
-            }
-
-            .hero-stat__value {
-                font-size: 1.4rem;
-                font-weight: 600;
-                color: #f9f8ff;
+                font-size: 0.85rem;
+                color: rgba(232, 225, 255, 0.7);
             }
 
             .metric-grid {
@@ -499,192 +303,93 @@ def _inject_theme() -> None:
 
             .metric-card {
                 position: relative;
-                border-radius: 24px;
-                padding: 1.6rem 1.7rem 1.8rem;
-                background: linear-gradient(180deg, rgba(20, 15, 48, 0.92) 0%, rgba(14, 10, 34, 0.88) 100%);
+                border-radius: 22px;
+                padding: 1.4rem 1.6rem;
+                background: rgba(19, 14, 44, 0.9);
                 border: 1px solid rgba(116, 96, 226, 0.4);
                 overflow: hidden;
-                box-shadow: 0 22px 46px rgba(6, 3, 23, 0.5);
-                display: flex;
-                flex-direction: column;
-                gap: 0.6rem;
+                box-shadow: 0 14px 36px rgba(6, 3, 23, 0.45);
                 --metric-accent: rgba(156, 122, 255, 0.6);
                 --metric-soft: rgba(140, 114, 255, 0.25);
                 --metric-border: rgba(170, 152, 255, 0.35);
-                --metric-progress: 0.55;
-            }
-
-            .metric-card::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(135deg, rgba(140, 114, 255, 0.15), transparent 55%);
-                opacity: 0.65;
-                pointer-events: none;
             }
 
             .metric-card::after {
                 content: "";
                 position: absolute;
-                inset: 16px -36px auto auto;
-                width: 140px;
-                height: 140px;
+                inset: 12px -30px auto auto;
+                width: 120px;
+                height: 120px;
                 border-radius: 50%;
-                background: radial-gradient(circle at center, var(--metric-accent), transparent 60%);
+                background: radial-gradient(circle at center, var(--metric-accent), transparent 65%);
                 opacity: 0.35;
                 transform: rotate(25deg);
             }
 
             .metric-icon {
-                width: 48px;
-                height: 48px;
-                border-radius: 16px;
+                width: 44px;
+                height: 44px;
+                border-radius: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.4rem;
+                font-size: 1.35rem;
                 background: var(--metric-soft);
                 border: 1px solid var(--metric-border);
-                margin-bottom: 0.4rem;
-                position: relative;
-                z-index: 2;
-            }
-
-            .metric-label {
-                font-size: 0.82rem;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-                color: rgba(215, 205, 255, 0.78);
-                position: relative;
-                z-index: 2;
+                margin-bottom: 0.8rem;
             }
 
             .metric-value {
-                font-size: 1.95rem;
+                font-size: 1.8rem;
                 font-weight: 700;
                 color: #f9f8ff;
-                position: relative;
-                z-index: 2;
             }
 
-            .metric-delta {
-                font-size: 0.82rem;
-                color: rgba(194, 184, 255, 0.8);
-                display: inline-flex;
-                align-items: center;
-                gap: 0.35rem;
-                position: relative;
-                z-index: 2;
-            }
-
-            .metric-delta::before {
-                content: '';
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: var(--metric-accent);
-                opacity: 0.7;
+            .metric-label {
+                font-size: 0.85rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: rgba(215, 205, 255, 0.75);
             }
 
             .metric-caption {
-                margin-top: 0.15rem;
-                font-size: 0.86rem;
-                color: rgba(222, 217, 255, 0.68);
-                position: relative;
-                z-index: 2;
-            }
-
-            .metric-progress {
-                position: relative;
-                margin-top: auto;
-                width: 100%;
-                height: 6px;
-                border-radius: 999px;
-                background: rgba(148, 124, 255, 0.22);
-                overflow: hidden;
-            }
-
-            .metric-progress span {
-                position: absolute;
-                inset: 0;
-                border-radius: inherit;
-                background: linear-gradient(90deg, rgba(148, 124, 255, 0.1), var(--metric-accent));
-                transform-origin: left;
-                transform: scaleX(var(--metric-progress, 0.65));
+                margin-top: 0.35rem;
+                font-size: 0.85rem;
+                color: rgba(222, 217, 255, 0.6);
             }
 
             .chart-card {
                 position: relative;
-                border-radius: 26px;
-                padding: 1.5rem 1.6rem 1.7rem;
-                background: linear-gradient(200deg, rgba(18, 12, 44, 0.92), rgba(10, 7, 30, 0.9));
-                border: 1px solid rgba(104, 83, 226, 0.38);
-                box-shadow: 0 24px 54px rgba(8, 4, 28, 0.55);
-                margin-bottom: 1.6rem;
-                overflow: hidden;
+                border-radius: 24px;
+                padding: 1.3rem 1.5rem 1.6rem;
+                background: rgba(16, 11, 38, 0.88);
+                border: 1px solid rgba(104, 83, 226, 0.35);
+                box-shadow: 0 16px 42px rgba(8, 4, 28, 0.55);
+                margin-bottom: 1.4rem;
             }
 
             .chart-card::before {
                 content: "";
                 position: absolute;
                 inset: 0;
-                background: radial-gradient(circle at top right, rgba(132, 111, 255, 0.22), transparent 60%);
+                background: linear-gradient(135deg, rgba(113, 90, 255, 0.08), transparent);
                 border-radius: inherit;
                 pointer-events: none;
-            }
-
-            .chart-card::after {
-                content: "";
-                position: absolute;
-                inset: auto -20px -60px auto;
-                width: 180px;
-                height: 180px;
-                border-radius: 50%;
-                background: radial-gradient(circle, rgba(90, 70, 220, 0.4), transparent 70%);
-                opacity: 0.5;
             }
 
             .chart-card__header {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 1.1rem;
+                align-items: center;
+                margin-bottom: 1rem;
                 position: relative;
                 z-index: 2;
-                gap: 1rem;
-            }
-
-            .chart-card__header-text {
-                display: flex;
-                flex-direction: column;
-                gap: 0.45rem;
-            }
-
-            .chart-card__badge {
-                display: inline-flex;
-                padding: 0.22rem 0.65rem;
-                border-radius: 999px;
-                border: 1px solid rgba(153, 131, 255, 0.45);
-                background: rgba(24, 17, 58, 0.6);
-                font-size: 0.7rem;
-                letter-spacing: 0.24em;
-                text-transform: uppercase;
-                color: rgba(221, 215, 255, 0.76);
             }
 
             .chart-card__title {
-                font-size: 1.08rem;
+                font-size: 1.05rem;
                 font-weight: 600;
                 color: #f0ecff;
-            }
-
-            .chart-card__summary {
-                margin-top: 1rem;
-                font-size: 0.88rem;
-                color: rgba(220, 214, 255, 0.76);
-                line-height: 1.55;
-                position: relative;
-                z-index: 2;
             }
 
             .chart-card .stAltairChart {
@@ -698,15 +403,12 @@ def _inject_theme() -> None:
 
             .dataset-card {
                 position: relative;
-                border-radius: 22px;
-                padding: 1.15rem 1.35rem;
-                background: linear-gradient(160deg, rgba(20, 15, 46, 0.9), rgba(11, 7, 28, 0.88));
-                border: 1px solid rgba(130, 108, 255, 0.38);
-                margin-bottom: 0.85rem;
+                border-radius: 20px;
+                padding: 1.1rem 1.3rem;
+                background: rgba(20, 15, 46, 0.9);
+                border: 1px solid rgba(130, 108, 255, 0.35);
+                margin-bottom: 0.75rem;
                 overflow: hidden;
-                display: flex;
-                gap: 1rem;
-                align-items: center;
             }
 
             .dataset-card::before {
@@ -714,81 +416,34 @@ def _inject_theme() -> None:
                 position: absolute;
                 top: -50px;
                 right: -30px;
-                width: 130px;
-                height: 130px;
+                width: 120px;
+                height: 120px;
                 border-radius: 50%;
                 background: radial-gradient(circle, rgba(149, 126, 255, 0.45), transparent 70%);
                 opacity: 0.45;
             }
 
-            .dataset-card__icon {
-                width: 46px;
-                height: 46px;
-                border-radius: 14px;
-                background: rgba(140, 114, 255, 0.18);
-                border: 1px solid rgba(170, 152, 255, 0.4);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.25rem;
-                position: relative;
-                z-index: 2;
-            }
-
-            .dataset-card__body {
-                position: relative;
-                z-index: 2;
-                flex: 1;
-            }
-
             .dataset-card h4 {
                 font-size: 1.02rem;
                 font-weight: 600;
-                margin: 0 0 0.25rem;
+                margin-bottom: 0.2rem;
                 color: #f2eeff;
             }
 
             .dataset-meta {
                 font-size: 0.78rem;
-                color: rgba(221, 215, 255, 0.68);
+                color: rgba(221, 215, 255, 0.65);
                 margin-bottom: 0;
             }
 
-            .dataset-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.3rem;
-                padding: 0.25rem 0.65rem;
-                border-radius: 999px;
-                font-size: 0.7rem;
-                letter-spacing: 0.16em;
-                text-transform: uppercase;
-                border: 1px solid rgba(172, 150, 255, 0.45);
-                margin-top: 0.55rem;
-            }
-
-            .dataset-badge--active {
-                background: rgba(90, 70, 220, 0.22);
-                color: rgba(232, 227, 255, 0.85);
-            }
-
-            .dataset-badge--paused {
-                background: rgba(180, 125, 255, 0.16);
-                border-color: rgba(180, 125, 255, 0.32);
-                color: rgba(230, 210, 255, 0.65);
-            }
-
             .dataset-controls {
-                background: rgba(12, 8, 30, 0.78);
-                border: 1px solid rgba(117, 97, 223, 0.38);
-                border-radius: 18px;
-                padding: 1rem 1.2rem;
-                margin: 0.7rem 0 1.6rem;
+                background: rgba(12, 8, 30, 0.85);
+                border: 1px solid rgba(117, 97, 223, 0.3);
+                border-radius: 16px;
+                padding: 0.95rem 1.1rem;
+                margin: 0.6rem 0 1.4rem;
                 display: flex;
-                gap: 1.25rem;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
+                gap: 1.2rem;
             }
 
             .dataset-controls > div[data-testid="column"] > div {
@@ -866,193 +521,6 @@ def _inject_theme() -> None:
                 border: 1px solid rgba(132, 111, 255, 0.35);
                 background: rgba(19, 14, 48, 0.8);
                 color: #f1edff;
-            }
-
-            @media (max-width: 1180px) {
-                main.stAppViewContainer > .main,
-                .stApp main .block-container {
-                    padding-left: 1.8rem;
-                    padding-right: 1.8rem;
-                }
-
-                .hero-wrapper {
-                    padding: 2.6rem 2.5rem;
-                    gap: 2rem;
-                }
-
-                .hero-stat--active {
-                    right: 2%;
-                }
-
-                .hero-stat--closure {
-                    right: -8%;
-                }
-            }
-
-            @media (max-width: 960px) {
-                .hero-wrapper {
-                    grid-template-columns: 1fr;
-                    text-align: center;
-                    padding: 2.2rem 1.8rem 2.5rem;
-                }
-
-                .hero-copy h1 {
-                    font-size: 2.2rem;
-                }
-
-                .hero-copy p {
-                    font-size: 0.98rem;
-                }
-
-                .hero-pills {
-                    justify-content: center;
-                }
-
-                .hero-meta {
-                    grid-template-columns: 1fr 1fr;
-                }
-
-                .hero-visual {
-                    min-height: 0;
-                    align-items: center;
-                }
-
-                .hero-radar {
-                    width: 230px;
-                    height: 230px;
-                }
-
-                .hero-orb {
-                    width: 170px;
-                    height: 170px;
-                }
-
-                .hero-stat {
-                    position: relative;
-                    margin-top: 1rem;
-                    display: flex;
-                    width: min(260px, 100%);
-                    text-align: center;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 16px 32px rgba(7, 4, 26, 0.25);
-                }
-
-                .hero-stat--active,
-                .hero-stat--closure {
-                    right: auto;
-                    top: auto;
-                    bottom: auto;
-                }
-
-                .metric-grid {
-                    gap: 1.1rem;
-                }
-
-                .chart-card {
-                    padding: 1.3rem 1.35rem 1.5rem;
-                }
-
-                .insight-card {
-                    padding: 1.4rem 1.5rem;
-                }
-            }
-
-            @media (max-width: 740px) {
-                .hero-wrapper {
-                    border-radius: 24px;
-                    padding: 2rem 1.5rem 2.3rem;
-                }
-
-                .hero-wrapper::before,
-                .hero-wrapper::after {
-                    display: none;
-                }
-
-                .hero-copy h1 {
-                    font-size: 1.9rem;
-                }
-
-                .hero-meta {
-                    grid-template-columns: 1fr;
-                }
-
-                .hero-pill {
-                    padding: 0.5rem 0.85rem;
-                    font-size: 0.76rem;
-                }
-
-                .metric-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .metric-card,
-                .chart-card,
-                .insight-card {
-                    border-radius: 22px;
-                }
-
-                .dataset-controls {
-                    flex-direction: column;
-                    gap: 0.9rem;
-                    align-items: stretch;
-                }
-
-                .dataset-card {
-                    padding: 1rem 1.15rem;
-                }
-
-                .hero-stat {
-                    width: 100%;
-                }
-
-                [data-testid="stSidebar"] .block-container {
-                    padding: 1.6rem 1.4rem 1.8rem;
-                }
-            }
-
-            @media (max-width: 540px) {
-                main.stAppViewContainer > .main,
-                .stApp main .block-container {
-                    padding-left: 1.1rem;
-                    padding-right: 1.1rem;
-                }
-
-                .hero-wrapper {
-                    padding: 1.7rem 1.2rem 2.1rem;
-                }
-
-                .hero-pills {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 0.6rem;
-                }
-
-                .hero-pill {
-                    justify-content: center;
-                }
-
-                .hero-copy h1 {
-                    font-size: 1.7rem;
-                }
-
-                .hero-orb {
-                    width: 160px;
-                    height: 160px;
-                }
-
-                .hero-orb__value {
-                    font-size: 2.4rem;
-                }
-
-                .hero-orb__meta {
-                    font-size: 0.78rem;
-                }
-
-                .dataset-controls {
-                    padding: 0.9rem 1rem;
-                    gap: 0.9rem;
-                }
             }
 
         </style>
@@ -1340,9 +808,6 @@ def _render_header(bundle: DatasetLoadResult) -> None:
         else "Upload or enable a dataset to unlock the command center."
     )
 
-    records_value = f"{record_count:,}" if record_count else "Awaiting data"
-    source_value = "Supabase live" if bundle.source == "supabase" else "Local dataset cache"
-
     hero_html = f"""
     <div class="hero-wrapper">
         <div class="hero-copy">
@@ -1355,34 +820,12 @@ def _render_header(bundle: DatasetLoadResult) -> None:
                 <span class="hero-pill">{source_line}</span>
                 <span class="hero-pill">{closed_ratio}% closure rate</span>
             </div>
-            <div class="hero-meta">
-                <div class="hero-meta__item">
-                    <span class="hero-meta__label">Records in scope</span>
-                    <span class="hero-meta__value">{records_value}</span>
-                </div>
-                <div class="hero-meta__item">
-                    <span class="hero-meta__label">Data source</span>
-                    <span class="hero-meta__value">{source_value}</span>
-                </div>
-            </div>
         </div>
         <div class="hero-visual">
-            <div class="hero-radar">
-                <div class="hero-orb">
-                    <span class="hero-orb__label">Tickets in focus</span>
-                    <span class="hero-orb__value">{record_count:,}</span>
-                    <span class="hero-orb__meta">Insights refreshed from {source_line.lower()}.</span>
-                </div>
-                <div class="hero-radar__orbit hero-radar__orbit--top">Live feed</div>
-                <div class="hero-radar__orbit hero-radar__orbit--bottom">{closed_ratio}% closed</div>
-            </div>
-            <div class="hero-stat hero-stat--active">
-                <span class="hero-stat__label">Datasets online</span>
-                <span class="hero-stat__value">{included}/{total}</span>
-            </div>
-            <div class="hero-stat hero-stat--closure">
-                <span class="hero-stat__label">Closure rate</span>
-                <span class="hero-stat__value">{closed_ratio}%</span>
+            <div class="hero-orb">
+                <span class="hero-orb__label">Tickets in focus</span>
+                <span class="hero-orb__value">{record_count:,}</span>
+                <span class="hero-orb__meta">Insights refreshed from {source_line.lower()}.</span>
             </div>
         </div>
     </div>
@@ -1679,6 +1122,10 @@ def kpi_section(filtered: pd.DataFrame):
     else:
         recent_delta = f"Updated {hours_since_update / 24:.0f}d ago"
 
+    avg_days_display = f"{avg_days_open:.1f}d" if pd.notna(avg_days_open) else "—"
+    latest_activity_display = (
+        latest_activity.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_activity) else "—"
+    )
     metric_data = [
         {
             "title": "Tickets in view",
@@ -1688,8 +1135,6 @@ def kpi_section(filtered: pd.DataFrame):
             "accent": "rgba(156, 122, 255, 0.65)",
             "soft": "rgba(156, 122, 255, 0.2)",
             "border": "rgba(183, 158, 255, 0.45)",
-            "delta": f"{open_tickets:,} open now" if total_tickets else "Awaiting data",
-            "progress": progress_total,
         },
         {
             "title": "Active load",
@@ -1699,8 +1144,6 @@ def kpi_section(filtered: pd.DataFrame):
             "accent": "rgba(76, 201, 240, 0.65)",
             "soft": "rgba(76, 201, 240, 0.2)",
             "border": "rgba(96, 224, 255, 0.45)",
-            "delta": f"{open_share * 100:.0f}% of scope" if total_tickets else "",
-            "progress": progress_open,
         },
         {
             "title": "Avg days open",
@@ -1710,8 +1153,6 @@ def kpi_section(filtered: pd.DataFrame):
             "accent": "rgba(255, 193, 96, 0.65)",
             "soft": "rgba(255, 193, 96, 0.18)",
             "border": "rgba(255, 210, 140, 0.45)",
-            "delta": f"{long_running} aging >4d" if long_running else "Holding steady",
-            "progress": progress_avg,
         },
         {
             "title": "Last update",
@@ -1721,20 +1162,16 @@ def kpi_section(filtered: pd.DataFrame):
             "accent": "rgba(255, 135, 199, 0.65)",
             "soft": "rgba(255, 135, 199, 0.18)",
             "border": "rgba(255, 160, 210, 0.45)",
-            "delta": recent_delta,
-            "progress": progress_recent,
         },
     ]
 
     cards_html = "".join(
         (
-            f"<div class=\"metric-card\" style=\"--metric-accent: {spec['accent']}; --metric-soft: {spec['soft']}; --metric-border: {spec['border']}; --metric-progress: {spec.get('progress', 0):.2f};\">"
+            f"<div class=\"metric-card\" style=\"--metric-accent: {spec['accent']}; --metric-soft: {spec['soft']}; --metric-border: {spec['border']};\">"
             f"<div class=\"metric-icon\">{spec['icon']}</div>"
             f"<div class=\"metric-label\">{spec['title']}</div>"
             f"<div class=\"metric-value\">{spec['value']}</div>"
-            + (f"<div class=\"metric-delta\">{spec['delta']}</div>" if spec.get("delta") else "")
-            + f"<div class=\"metric-caption\">{spec['description']}</div>"
-            + "<div class=\"metric-progress\"><span></span></div>"
+            f"<div class=\"metric-caption\">{spec['description']}</div>"
             "</div>"
         )
         for spec in metric_data
@@ -1932,11 +1369,10 @@ def build_charts(filtered: pd.DataFrame):
     col1, col2 = st.columns(2, gap="large")
     with col1:
         st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-card__header'>", unsafe_allow_html=True)
-        header_cols = st.columns([1.6, 1])
+        header_cols = st.columns([1, 1])
         with header_cols[0]:
             st.markdown(
-                "<div class='chart-card__header-text'><span class='chart-card__badge'>Queues</span><div class='chart-card__title'>Tickets by queue</div></div>",
+                "<div class='chart-card__title'>Tickets by queue</div>",
                 unsafe_allow_html=True,
             )
         with header_cols[1]:
@@ -1945,22 +1381,16 @@ def build_charts(filtered: pd.DataFrame):
                 default_value="Bar",
                 key="queue_chart_type",
             )
-        st.markdown("</div>", unsafe_allow_html=True)
         st.altair_chart(
             _queue_chart(tickets_by_queue, queue_chart_type), use_container_width=True
-        )
-        st.markdown(
-            f"<div class='chart-card__summary'>{_queue_summary(tickets_by_queue)}</div>",
-            unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-card__header'>", unsafe_allow_html=True)
-        header_cols = st.columns([1.6, 1])
+        header_cols = st.columns([1, 1])
         with header_cols[0]:
             st.markdown(
-                "<div class='chart-card__header-text'><span class='chart-card__badge'>Categories</span><div class='chart-card__title'>Top categories</div></div>",
+                "<div class='chart-card__title'>Top categories</div>",
                 unsafe_allow_html=True,
             )
         with header_cols[1]:
@@ -1969,24 +1399,18 @@ def build_charts(filtered: pd.DataFrame):
                 default_value="Bar",
                 key="category_chart_type",
             )
-        st.markdown("</div>", unsafe_allow_html=True)
         st.altair_chart(
             _category_chart(tickets_by_category, category_chart_type),
             use_container_width=True,
-        )
-        st.markdown(
-            f"<div class='chart-card__summary'>{_category_summary(tickets_by_category)}</div>",
-            unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-card__header'>", unsafe_allow_html=True)
-        header_cols = st.columns([1.6, 1])
+        header_cols = st.columns([1, 1])
         with header_cols[0]:
             st.markdown(
-                "<div class='chart-card__header-text'><span class='chart-card__badge'>Statuses</span><div class='chart-card__title'>Tickets by status</div></div>",
+                "<div class='chart-card__title'>Tickets by status</div>",
                 unsafe_allow_html=True,
             )
         with header_cols[1]:
@@ -1995,22 +1419,16 @@ def build_charts(filtered: pd.DataFrame):
                 default_value="Bar",
                 key="status_chart_type",
             )
-        st.markdown("</div>", unsafe_allow_html=True)
         st.altair_chart(
             _status_chart(tickets_by_status, status_chart_type), use_container_width=True
-        )
-        st.markdown(
-            f"<div class='chart-card__summary'>{_status_summary(tickets_by_status)}</div>",
-            unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='chart-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-card__header'>", unsafe_allow_html=True)
-        header_cols = st.columns([1.6, 1])
+        header_cols = st.columns([1, 1])
         with header_cols[0]:
             st.markdown(
-                "<div class='chart-card__header-text'><span class='chart-card__badge'>Velocity</span><div class='chart-card__title'>Tickets opened per day</div></div>",
+                "<div class='chart-card__title'>Tickets opened per day</div>",
                 unsafe_allow_html=True,
             )
         with header_cols[1]:
@@ -2019,13 +1437,8 @@ def build_charts(filtered: pd.DataFrame):
                 default_value="Line",
                 key="trend_chart_type",
             )
-        st.markdown("</div>", unsafe_allow_html=True)
         st.altair_chart(
             _trend_chart(tickets_over_time, trend_chart_type), use_container_width=True
-        )
-        st.markdown(
-            f"<div class='chart-card__summary'>{_trend_summary(tickets_over_time)}</div>",
-            unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
