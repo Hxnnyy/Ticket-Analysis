@@ -1,6 +1,8 @@
-# Feature Plan: Supabase CSV Management
+# Dashboard Deep Polish Follow-up Plan
 
 Progress: 100%
-- [x] Stabilise empty-state handling when all Supabase datasets are excluded.
-- [x] Refresh the dashboard aesthetic with Shadcn UI components and a purple theme.
-- [x] Synchronise session metadata with Supabase and document the new dependency.
+
+- 100% – Capture baseline desktop and mobile screenshots, confirm sidebar overlap on mobile, and log polish targets (hero stacking, spacing, card depth, progress indicators).
+- 100% – Rework responsive layout for hero + sidebar (stacking, padding, visibility) and smooth typography scaling on small screens.
+- 100% – Refresh metric and dataset card styling for clarity (progress bar rendering, contrast, content alignment tweaks).
+- 100% – Re-test across breakpoints, capture updated desktop/mobile screenshots, and finalise summary once visuals look correct.
