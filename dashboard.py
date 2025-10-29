@@ -4,6 +4,7 @@ Interactive dashboard for the ticket analysis dataset.
 Run with: streamlit run dashboard.py
 """
 
+import html
 import io
 import re
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 import streamlit_shadcn_ui as ui
+import streamlit.components.v1 as components
 
 from supabase_utils import (
     DatasetMeta,
@@ -54,6 +56,255 @@ EXPECTED_COLUMNS = [
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2MB
 
+CHART_CATEGORY_COLORS = [
+    "#d8c8ff",
+    "#bba0ff",
+    "#9c7cff",
+    "#7b57ff",
+    "#5c3ced",
+    "#4327be",
+]
+CHART_AXIS_LABEL_COLOR = "rgba(226, 220, 255, 0.78)"
+CHART_AXIS_TITLE_COLOR = "rgba(201, 189, 255, 0.82)"
+CHART_GRID_COLOR = "rgba(132, 110, 238, 0.22)"
+CHART_DOMAIN_COLOR = "rgba(164, 142, 255, 0.45)"
+CHART_VIEW_FILL = "rgba(18, 12, 42, 0.78)"
+
+
+def _apply_chart_theme(
+    chart: alt.Chart, *, title: str, height: int = 300, view_fill: bool = True
+) -> alt.Chart:
+    configured = (
+        chart.properties(title=title, height=height, background="transparent")
+        .configure_view(
+            fill=CHART_VIEW_FILL if view_fill else "transparent",
+            stroke=None,
+        )
+        .configure_axis(
+            labelColor=CHART_AXIS_LABEL_COLOR,
+            titleColor=CHART_AXIS_TITLE_COLOR,
+            gridColor=CHART_GRID_COLOR,
+            tickColor=CHART_DOMAIN_COLOR,
+            domainColor=CHART_DOMAIN_COLOR,
+        )
+        .configure_title(
+            color="#f2eeff",
+            font="Inter",
+            fontSize=16,
+            anchor="start",
+            fontWeight=600,
+        )
+        .configure_legend(
+            labelColor=CHART_AXIS_LABEL_COLOR,
+            titleColor=CHART_AXIS_TITLE_COLOR,
+            orient="top",
+            direction="horizontal",
+        )
+    )
+    return configured
+
+
+def _metric_icon_svg(icon_key: str) -> str:
+    icons = {
+        "tickets": """
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metric-bars-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d7c8ff"/>
+      <stop offset="1" stop-color="#7a54ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="14" width="4" height="6" rx="1.2" fill="url(#metric-bars-gradient)"/>
+  <rect x="10" y="9" width="4" height="11" rx="1.2" fill="url(#metric-bars-gradient)"/>
+  <rect x="16" y="5" width="4" height="15" rx="1.2" fill="url(#metric-bars-gradient)"/>
+</svg>
+""",
+        "active": """
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metric-active-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7df1ff"/>
+      <stop offset="1" stop-color="#4cc7ff"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 2 9 11h4l-1 9 7-12h-4l3-6z" fill="url(#metric-active-gradient)" />
+</svg>
+""",
+        "time": """
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metric-time-gradient" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd8a0"/>
+      <stop offset="1" stop-color="#ffb562"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" stroke="url(#metric-time-gradient)" stroke-width="2" fill="none"/>
+  <path d="M12 7v5l3 2" stroke="url(#metric-time-gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+""",
+        "update": """
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="metric-update-gradient" x1="5" y1="19" x2="19" y2="5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb2df"/>
+      <stop offset="1" stop-color="#ff77b9"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 5a7 7 0 1 1-6.35 9.58" fill="none" stroke="url(#metric-update-gradient)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M5 8V5H2" stroke="url(#metric-update-gradient)" stroke-width="2" stroke-linecap="round"/>
+</svg>
+""",
+    }
+    return icons.get(icon_key, icons["tickets"])
+
+
+def _dataset_icon_svg(identifier: str) -> str:
+    gradient_id = f"dataset-gradient-{identifier}"
+    return f"""
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="{gradient_id}" x1="4" y1="20" x2="20" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e7dbff"/>
+      <stop offset="1" stop-color="#8d66ff"/>
+    </linearGradient>
+  </defs>
+  <path d="M5 7.5C5 5.6 8.1 4 12 4s7 1.6 7 3.5S15.9 11 12 11 5 9.4 5 7.5Z" fill="url(#{gradient_id})"/>
+  <path d="M5 7.5v4c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5v-4" fill="none" stroke="url(#{gradient_id})" stroke-width="1.4"/>
+  <path d="M5 11.5v4c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5v-4" fill="none" stroke="url(#{gradient_id})" stroke-width="1.4"/>
+</svg>
+"""
+
+
+def _hero_icon_svg(icon_key: str) -> str:
+    icons = {
+        "active": """
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-active-gradient" x1="3" y1="17" x2="17" y2="3" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bda5ff"/>
+      <stop offset="1" stop-color="#7c5cff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="10" cy="10" r="8.5" fill="url(#hero-active-gradient)"/>
+  <path d="M14 7.5 9.1 12.4 7 10.3" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+""",
+        "stored": """
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-stored-gradient" x1="4" y1="17" x2="16" y2="5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e8dcff"/>
+      <stop offset="1" stop-color="#a27bff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="5.5" width="12" height="3.2" rx="1.2" fill="url(#hero-stored-gradient)"/>
+  <rect x="4" y="9.4" width="12" height="3.2" rx="1.2" fill="url(#hero-stored-gradient)" opacity="0.85"/>
+  <rect x="4" y="13.3" width="12" height="3.2" rx="1.2" fill="url(#hero-stored-gradient)" opacity="0.7"/>
+</svg>
+""",
+        "source": """
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-source-gradient" x1="5" y1="16" x2="15" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7ef5ff"/>
+      <stop offset="1" stop-color="#4abdf2"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 4 6.5 7.5h2.5V12.5H7l3 3.5 3-3.5h-2V7.5h2.5Z" fill="url(#hero-source-gradient)"/>
+</svg>
+""",
+        "local": """
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-local-gradient" x1="4" y1="16" x2="16" y2="4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd7a6"/>
+      <stop offset="1" stop-color="#ffb56d"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 3 4 7.5v5c0 1 .5 1.8 1.5 2.4l4.5 2.6 4.5-2.6c1-.6 1.5-1.4 1.5-2.4v-5Z" fill="none" stroke="url(#hero-local-gradient)" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M7.5 9.5 10 12l2.5-2.5" fill="none" stroke="#ffd9b7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+""",
+        "closure": """
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hero-closure-gradient" x1="5" y1="15" x2="15" y2="5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffbadd"/>
+      <stop offset="1" stop-color="#ff7cb8"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 3.5a6.5 6.5 0 1 1-6.2 8.2" fill="none" stroke="url(#hero-closure-gradient)" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="10" cy="10" r="2.1" fill="url(#hero-closure-gradient)"/>
+</svg>
+""",
+    }
+    default_icon = icons["active"]
+    return icons.get(icon_key, default_icon)
+
+
+def _hero_pill(icon_key: str, label: str) -> str:
+    safe_label = html.escape(label)
+    return (
+        "<span class='hero-pill'>"
+        f"<span class='hero-pill__icon'>{_hero_icon_svg(icon_key)}</span>"
+        f"<span class='hero-pill__label'>{safe_label}</span>"
+        "</span>"
+    )
+
+
+def _render_sidebar_toggle() -> None:
+    components.html(
+        """
+        <script>
+        (function() {
+            const doc = window.parent ? window.parent.document : window.document;
+            if (!doc) { return; }
+            const ensureButton = () => {
+                let wrapper = doc.querySelector(".sidebar-toggle");
+                if (!wrapper) {
+                    wrapper = doc.createElement("div");
+                    wrapper.className = "sidebar-toggle";
+                    wrapper.innerHTML = `
+                        <button class="sidebar-toggle__button" type="button" aria-label="Toggle sidebar" aria-expanded="true">
+                            <span class="sidebar-toggle__icon sidebar-toggle__icon--hide">&#x276E;</span>
+                            <span class="sidebar-toggle__icon sidebar-toggle__icon--show">&#9776;</span>
+                        </button>
+                    `;
+                    doc.body.appendChild(wrapper);
+                }
+                return { wrapper, button: wrapper.querySelector("button") };
+            };
+            const nativeButton = doc.querySelector("[data-testid='stSidebarCollapseButton'] button");
+            const { wrapper, button: toggleButton } = ensureButton();
+            if (!nativeButton || !wrapper || !toggleButton) { return; }
+            const sidebar = doc.querySelector("[data-testid='stSidebar']");
+            if (!sidebar) { return; }
+            const syncState = () => {
+                const rect = sidebar.getBoundingClientRect();
+                const collapsed = rect.width < 20;
+                const leftOffset = collapsed ? "1.4rem" : `${Math.max(rect.width, 0) + 24}px`;
+                wrapper.style.left = leftOffset;
+                toggleButton.classList.toggle("is-collapsed", collapsed);
+                toggleButton.setAttribute("aria-expanded", collapsed ? "false" : "true");
+                toggleButton.style.display = "inline-flex";
+            };
+            toggleButton.onclick = (event) => {
+                event.preventDefault();
+                nativeButton.click();
+                setTimeout(syncState, 320);
+            };
+            if (typeof ResizeObserver !== "undefined") {
+                const observer = new ResizeObserver(syncState);
+                observer.observe(sidebar);
+            }
+            syncState();
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
 
 def _inject_theme() -> None:
     st.markdown(
@@ -79,7 +330,8 @@ def _inject_theme() -> None:
 
             .stApp header {
                 background: transparent;
-            }
+                pointer-events: none;
+            }\n\n            .stApp header * {\n                pointer-events: none;\n            }\n
 
             .stApp [data-testid="stToolbar"] {
                 display: none;
@@ -89,6 +341,69 @@ def _inject_theme() -> None:
             .stApp main .block-container {
                 padding-top: 2.4rem;
                 padding-bottom: 2rem;
+            }
+
+            .stApp [data-testid="stToolbar"] {
+                display: none;
+            }
+
+            [data-testid="stSidebarCollapseButton"] {
+                display: none !important;
+            }
+
+            .sidebar-toggle {
+                position: fixed;
+                top: 1.4rem;
+                left: 1.4rem;
+                z-index: 4000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: auto;
+            }
+
+            .sidebar-toggle__button {
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+                border: 1px solid rgba(136, 115, 255, 0.5);
+                background: linear-gradient(135deg, rgba(102, 78, 204, 0.88), rgba(158, 135, 255, 0.95));
+                box-shadow: 0 18px 32px rgba(20, 8, 58, 0.55);
+                color: #ede6ff;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: auto;
+                z-index: 4000;
+                cursor: pointer;
+                transition: transform 140ms ease, box-shadow 140ms ease;
+            }
+
+            .sidebar-toggle__button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 22px 36px rgba(26, 11, 68, 0.6);
+            }
+
+            .sidebar-toggle__icon {
+                font-size: 1.2rem;
+                line-height: 1;
+                display: inline-flex;
+            }
+
+            .sidebar-toggle__icon--show {
+                display: none;
+            }
+
+            .sidebar-toggle__button.is-collapsed .sidebar-toggle__icon--hide {
+                display: none;
+            }
+
+            .sidebar-toggle__button.is-collapsed .sidebar-toggle__icon--show {
+                display: inline-flex;
+            }
+
+            [data-testid="stSidebarHeader"] {
+                pointer-events: none;
             }
 
             .section-title {
@@ -123,6 +438,44 @@ def _inject_theme() -> None:
 
             [data-testid="stSidebar"] .stFileUploader label {
                 color: rgba(228, 223, 255, 0.8);
+            }
+
+            .dataset-upload {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.9rem;
+                margin-bottom: 1.4rem;
+            }
+
+            .dataset-upload [data-testid="stFileUploader"] {
+                width: 100%;
+            }
+
+            .dataset-upload [data-testid="stFileUploader"] section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                border-radius: 16px !important;
+                border: 1px dashed rgba(158, 135, 255, 0.55) !important;
+                background: rgba(31, 22, 70, 0.85) !important;
+            }
+
+            .dataset-upload [data-testid="stFormSubmitButton"] {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .dataset-upload [data-testid="stFormSubmitButton"] button {
+                width: 100%;
+                border-radius: 999px;
+                background: linear-gradient(135deg, rgba(104, 80, 214, 0.9), rgba(161, 135, 255, 0.95));
+                border: 1px solid rgba(174, 152, 255, 0.6);
+                color: #f4f1ff;
+                letter-spacing: 0.05em;
             }
 
             [data-testid="stSidebar"] .stAlert {
@@ -212,21 +565,34 @@ def _inject_theme() -> None:
             }
 
             .hero-pill {
-                padding: 0.55rem 0.9rem;
-                border-radius: 14px;
-                background: rgba(20, 15, 46, 0.85);
-                border: 1px solid rgba(146, 118, 255, 0.35);
-                font-size: 0.78rem;
+                padding: 0.6rem 1rem;
+                border-radius: 999px;
+                background: linear-gradient(145deg, rgba(27, 19, 66, 0.92), rgba(15, 10, 42, 0.88));
+                border: 1px solid rgba(155, 133, 255, 0.38);
+                font-size: 0.8rem;
                 display: inline-flex;
                 align-items: center;
-                gap: 0.4rem;
+                gap: 0.55rem;
+                box-shadow: 0 12px 24px rgba(10, 6, 30, 0.45);
             }
 
-            .hero-pill::before {
-                content: "\2022";
-                color: #9e88ff;
-                font-size: 1.2rem;
-                line-height: 0;
+            .hero-pill__icon {
+                display: grid;
+                place-items: center;
+                width: 22px;
+                height: 22px;
+            }
+
+            .hero-pill__icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .hero-pill__label {
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: rgba(233, 226, 255, 0.85);
+                font-size: 0.74rem;
             }
 
             .hero-visual {
@@ -330,13 +696,17 @@ def _inject_theme() -> None:
                 width: 44px;
                 height: 44px;
                 border-radius: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.35rem;
-                background: var(--metric-soft);
+                display: grid;
+                place-items: center;
+                background: linear-gradient(145deg, var(--metric-soft), rgba(116, 88, 249, 0.15));
                 border: 1px solid var(--metric-border);
                 margin-bottom: 0.8rem;
+                box-shadow: 0 12px 26px rgba(20, 10, 52, 0.4);
+            }
+
+            .metric-icon svg {
+                width: 24px;
+                height: 24px;
             }
 
             .metric-value {
@@ -360,30 +730,23 @@ def _inject_theme() -> None:
 
             .chart-card {
                 position: relative;
-                border-radius: 24px;
-                padding: 1.3rem 1.5rem 1.6rem;
-                background: rgba(16, 11, 38, 0.88);
-                border: 1px solid rgba(104, 83, 226, 0.35);
-                box-shadow: 0 16px 42px rgba(8, 4, 28, 0.55);
-                margin-bottom: 1.4rem;
+                border-radius: 26px;
+                padding: 1.6rem 1.7rem 1.9rem;
+                background: linear-gradient(160deg, rgba(21, 15, 54, 0.92), rgba(10, 6, 26, 0.9));
+                border: 1px solid rgba(126, 103, 236, 0.4);
+                box-shadow: 0 22px 48px rgba(8, 5, 26, 0.55);
+                margin-bottom: 1.6rem;
             }
 
             .chart-card::before {
                 content: "";
                 position: absolute;
                 inset: 0;
-                background: linear-gradient(135deg, rgba(113, 90, 255, 0.08), transparent);
+                background:
+                    radial-gradient(circle at 20% -10%, rgba(148, 120, 255, 0.22), transparent 55%),
+                    radial-gradient(circle at 80% 0%, rgba(92, 69, 213, 0.28), transparent 60%);
                 border-radius: inherit;
                 pointer-events: none;
-            }
-
-            .chart-card__header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-                position: relative;
-                z-index: 2;
             }
 
             .chart-card__title {
@@ -397,30 +760,241 @@ def _inject_theme() -> None:
                 z-index: 2;
             }
 
+            .chart-card .vega-embed {
+                background: transparent !important;
+            }
+
+            .chart-card canvas {
+                border-radius: 18px;
+            }
+
+            .chart-card > div[data-testid="column"] {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.9rem;
+                position: relative;
+                z-index: 2;
+                margin-bottom: 0.6rem;
+            }
+
             .chart-card > div[data-testid="column"] > div {
                 padding: 0 !important;
             }
 
+            .chart-card > div[data-testid="column"] > div:last-child {
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .chart-card [role="tablist"] {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.35rem;
+                border-radius: 999px;
+                background: rgba(63, 43, 132, 0.35);
+                border: 1px solid rgba(156, 132, 255, 0.35);
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+            }
+
+            .chart-card [role="tab"] {
+                padding: 0.3rem 0.95rem;
+                border-radius: 999px;
+                border: none;
+                background: transparent;
+                color: rgba(220, 212, 255, 0.65);
+                font-size: 0.8rem;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                transition: all 0.2s ease;
+            }
+
+            .chart-card [role="tab"]:hover {
+                color: rgba(248, 244, 255, 0.85);
+            }
+
+            .chart-card [role="tab"][data-state="active"] {
+                color: #140b2d;
+                background: linear-gradient(135deg, #f3ebff 0%, #b092ff 100%);
+                box-shadow: 0 14px 24px rgba(86, 60, 189, 0.3);
+            }
+
+            .dataset-cluster {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.9rem;
+                width: 100%;
+            }
+
             .dataset-card {
                 position: relative;
-                border-radius: 20px;
-                padding: 1.1rem 1.3rem;
-                background: rgba(20, 15, 46, 0.9);
-                border: 1px solid rgba(130, 108, 255, 0.35);
-                margin-bottom: 0.75rem;
-                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 0.75rem;
+                border-radius: 22px;
+                padding: 1.1rem 1.4rem;
+                background: linear-gradient(155deg, rgba(27, 18, 70, 0.95), rgba(14, 9, 38, 0.92));
+                border: 1px solid rgba(149, 128, 255, 0.38);
+                margin: 0.8rem auto;
+                width: 100%;
+                max-width: 320px;
+                box-shadow: 0 20px 36px rgba(8, 4, 24, 0.55);
             }
 
             .dataset-card::before {
                 content: "";
                 position: absolute;
-                top: -50px;
-                right: -30px;
-                width: 120px;
-                height: 120px;
+                inset: -10% -25% auto auto;
+                width: 140px;
+                height: 140px;
                 border-radius: 50%;
-                background: radial-gradient(circle, rgba(149, 126, 255, 0.45), transparent 70%);
-                opacity: 0.45;
+                background: radial-gradient(circle, rgba(146, 119, 255, 0.35), transparent 70%);
+            }
+
+            .dataset-card__icon {
+                position: relative;
+                width: 48px;
+                height: 48px;
+                border-radius: 16px;
+                display: grid;
+                place-items: center;
+                background: linear-gradient(140deg, rgba(229, 214, 255, 0.9), rgba(144, 102, 255, 0.85));
+                border: 1px solid rgba(222, 208, 255, 0.6);
+                box-shadow: 0 12px 30px rgba(23, 11, 54, 0.55);
+                z-index: 1;
+                margin-bottom: 0.4rem;
+            }
+
+            .dataset-card__icon svg {
+                width: 26px;
+                height: 26px;
+            }
+
+            .dataset-card__body {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.45rem;
+            }
+
+            .dataset-card__body h4 {
+                margin: 0;
+                font-size: 1rem;
+                color: #f6f2ff;
+            }
+
+            .dataset-meta {
+                font-size: 0.78rem;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                text-align: center;
+                color: rgba(215, 206, 255, 0.7);
+            }
+
+            .dataset-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 0.6rem;
+                padding: 0.3rem 0.75rem;
+                border-radius: 999px;
+                font-size: 0.72rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .dataset-badge--active {
+                background: rgba(119, 255, 193, 0.18);
+                border: 1px solid rgba(119, 255, 193, 0.42);
+                color: #70ffc4;
+            }
+
+            .dataset-badge--paused {
+                background: rgba(255, 170, 146, 0.18);
+                border: 1px solid rgba(255, 170, 146, 0.35);
+                color: #ffc0b0;
+            }
+
+            .dataset-controls {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.9rem;
+                align-items: center;
+                margin: 0.8rem 0 1.2rem;
+                width: 100%;
+            }
+
+            .dataset-controls [data-testid="column"] {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 !important;
+            }
+
+            .dataset-controls label {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 0.82rem;
+                letter-spacing: 0.03em;
+                color: rgba(232, 224, 255, 0.8) !important;
+            }
+
+            .dataset-controls button[role="switch"] {
+                position: relative;
+                width: 3.1rem;
+                height: 1.6rem;
+                border-radius: 999px;
+                border: 1px solid rgba(184, 162, 255, 0.5);
+                background: rgba(63, 39, 134, 0.35);
+                transition: all 0.25s ease;
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+            }
+
+            .dataset-controls button[role="switch"]::after {
+                content: "";
+                position: absolute;
+                top: 2px;
+                left: 2.2px;
+                width: 1.2rem;
+                height: 1.2rem;
+                border-radius: 50%;
+                background: linear-gradient(140deg, #f2edff, #bba3ff);
+                box-shadow: 0 6px 12px rgba(22, 11, 52, 0.4);
+                transition: transform 0.25s ease;
+            }
+
+            .dataset-controls button[role="switch"][data-state="checked"] {
+                background: linear-gradient(135deg, rgba(142, 109, 255, 0.85), rgba(203, 178, 255, 0.95));
+                border-color: rgba(203, 178, 255, 0.6);
+                box-shadow: 0 12px 24px rgba(95, 70, 194, 0.35);
+            }
+
+            .dataset-controls button[role="switch"][data-state="checked"]::after {
+                transform: translateX(1.45rem);
+            }
+
+            .dataset-controls button:not([role="switch"]) {
+                width: 100%;
+                border-radius: 999px;
+                padding: 0.55rem 1rem;
+                font-weight: 600;
+                letter-spacing: 0.05em;
+                border: 1px solid rgba(255, 170, 198, 0.55);
+                background: linear-gradient(135deg, rgba(255, 126, 177, 0.88), rgba(255, 90, 137, 0.92));
+                box-shadow: 0 14px 26px rgba(120, 30, 83, 0.35);
+                color: #fff;
+            }
+
+            .dataset-controls button:not([role="switch"]):hover {
+                filter: brightness(1.08);
             }
 
             .dataset-card h4 {
@@ -808,18 +1382,23 @@ def _render_header(bundle: DatasetLoadResult) -> None:
         else "Upload or enable a dataset to unlock the command center."
     )
 
+    source_icon_key = "source" if bundle.source == "supabase" else "local"
+    hero_pills_html = "".join(
+        [
+            _hero_pill("active", active_line),
+            _hero_pill("stored", stored_line),
+            _hero_pill(source_icon_key, source_line),
+            _hero_pill("closure", f"{closed_ratio}% closure rate"),
+        ]
+    )
+
     hero_html = f"""
     <div class="hero-wrapper">
         <div class="hero-copy">
             <span class="hero-kicker">Operations Pulse</span>
             <h1>Ticket Command Center</h1>
             <p>{data_line} Dive into queue performance, resolution velocity, and workload distribution from a single view.</p>
-            <div class="hero-pills">
-                <span class="hero-pill">{active_line}</span>
-                <span class="hero-pill">{stored_line}</span>
-                <span class="hero-pill">{source_line}</span>
-                <span class="hero-pill">{closed_ratio}% closure rate</span>
-            </div>
+            <div class="hero-pills">{hero_pills_html}</div>
         </div>
         <div class="hero-visual">
             <div class="hero-orb">
@@ -845,6 +1424,7 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
             return
 
         registry_state = st.session_state.get("dataset_registry", {})
+        st.markdown("<div class='dataset-upload'>", unsafe_allow_html=True)
         with st.form("dataset_upload_form", clear_on_submit=True):
             uploader = st.file_uploader(
                 "Upload CSV (max 2 MB)",
@@ -853,6 +1433,7 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
                 key="dataset_upload_widget",
             )
             submitted = st.form_submit_button("Add dataset")
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if submitted:
             if uploader is None:
@@ -908,6 +1489,7 @@ def dataset_management_panel(bundle: DatasetLoadResult) -> None:
             )
 
 
+
 def _render_dataset_row(name: str) -> None:
     registry = st.session_state.get("dataset_registry", {})
     meta = registry.get(name)
@@ -929,12 +1511,16 @@ def _render_dataset_row(name: str) -> None:
 
     badge_class = "dataset-badge--active" if meta.included else "dataset-badge--paused"
     badge_label = "Active" if meta.included else "Excluded"
+    status_summary = " &bull; ".join(html.escape(bit) for bit in status_bits)
+    safe_name = html.escape(name)
+    icon_identifier = f"ds{_sanitize_key('dataset', name, 'icon')}"
+    st.markdown("<div class='dataset-cluster'>", unsafe_allow_html=True)
     dataset_card_html = f"""
     <div class='dataset-card'>
-        <div class='dataset-card__icon'>📁</div>
+        <div class='dataset-card__icon'>{_dataset_icon_svg(icon_identifier)}</div>
         <div class='dataset-card__body'>
-            <h4>{name}</h4>
-            <div class='dataset-meta'>{' · '.join(status_bits)}</div>
+            <h4>{safe_name}</h4>
+            <div class='dataset-meta'>{status_summary}</div>
             <span class='dataset-badge {badge_class}'>{badge_label}</span>
         </div>
     </div>
@@ -942,7 +1528,7 @@ def _render_dataset_row(name: str) -> None:
     st.markdown(dataset_card_html, unsafe_allow_html=True)
 
     st.markdown("<div class='dataset-controls'>", unsafe_allow_html=True)
-    include_col, delete_col = st.columns([1.3, 1])
+    include_col, delete_col = st.columns([1.3, 1], gap="medium")
 
     with include_col:
         include_state = ui.switch(
@@ -960,12 +1546,12 @@ def _render_dataset_row(name: str) -> None:
         )
 
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if include_state != meta.included:
         previous = meta.included
         meta.included = include_state
         if _persist_registry(registry):
-            st.session_state[include_key] = include_state
             st.sidebar.info(
                 f"{'Included' if include_state else 'Excluded'} '{name}' in analytics."
             )
@@ -988,8 +1574,6 @@ def _render_dataset_row(name: str) -> None:
             else:
                 if removed_meta is not None:
                     registry[name] = removed_meta
-
-
 def _checkbox_filter(expander_label: str, column: str, df: pd.DataFrame) -> list[str]:
     raw_options = [value for value in df[column].dropna().unique()]
     options = sorted(raw_options, key=lambda value: str(value).lower())
@@ -1122,53 +1706,49 @@ def kpi_section(filtered: pd.DataFrame):
     else:
         recent_delta = f"Updated {hours_since_update / 24:.0f}d ago"
 
-    avg_days_display = f"{avg_days_open:.1f}d" if pd.notna(avg_days_open) else "—"
-    latest_activity_display = (
-        latest_activity.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_activity) else "—"
-    )
     metric_data = [
         {
             "title": "Tickets in view",
             "value": f"{total_tickets:,}",
             "description": "Records after filters",
-            "icon": "🛰️",
-            "accent": "rgba(156, 122, 255, 0.65)",
-            "soft": "rgba(156, 122, 255, 0.2)",
-            "border": "rgba(183, 158, 255, 0.45)",
+            "icon_svg": _metric_icon_svg("tickets"),
+            "accent": "rgba(176, 148, 255, 0.68)",
+            "soft": "rgba(164, 135, 255, 0.22)",
+            "border": "rgba(205, 186, 255, 0.48)",
         },
         {
             "title": "Active load",
             "value": f"{open_tickets:,}",
-            "description": "Still awaiting closure",
-            "icon": "📡",
-            "accent": "rgba(76, 201, 240, 0.65)",
-            "soft": "rgba(76, 201, 240, 0.2)",
-            "border": "rgba(96, 224, 255, 0.45)",
+            "description": f"Still awaiting closure &bull; {long_running} running &gt;4d",
+            "icon_svg": _metric_icon_svg("active"),
+            "accent": "rgba(103, 229, 255, 0.65)",
+            "soft": "rgba(90, 198, 255, 0.22)",
+            "border": "rgba(132, 231, 255, 0.45)",
         },
         {
             "title": "Avg days open",
             "value": avg_days_display,
             "description": "Mean time to resolve",
-            "icon": "⏱️",
-            "accent": "rgba(255, 193, 96, 0.65)",
-            "soft": "rgba(255, 193, 96, 0.18)",
-            "border": "rgba(255, 210, 140, 0.45)",
+            "icon_svg": _metric_icon_svg("time"),
+            "accent": "rgba(255, 204, 140, 0.68)",
+            "soft": "rgba(255, 189, 102, 0.22)",
+            "border": "rgba(255, 217, 167, 0.45)",
         },
         {
             "title": "Last update",
             "value": latest_activity_display,
-            "description": "Most recent ticket touch",
-            "icon": "🕒",
-            "accent": "rgba(255, 135, 199, 0.65)",
-            "soft": "rgba(255, 135, 199, 0.18)",
-            "border": "rgba(255, 160, 210, 0.45)",
+            "description": recent_delta,
+            "icon_svg": _metric_icon_svg("update"),
+            "accent": "rgba(255, 167, 214, 0.68)",
+            "soft": "rgba(255, 149, 196, 0.22)",
+            "border": "rgba(255, 188, 220, 0.45)",
         },
     ]
 
     cards_html = "".join(
         (
             f"<div class=\"metric-card\" style=\"--metric-accent: {spec['accent']}; --metric-soft: {spec['soft']}; --metric-border: {spec['border']};\">"
-            f"<div class=\"metric-icon\">{spec['icon']}</div>"
+            f"<div class=\"metric-icon\">{spec['icon_svg']}</div>"
             f"<div class=\"metric-label\">{spec['title']}</div>"
             f"<div class=\"metric-value\">{spec['value']}</div>"
             f"<div class=\"metric-caption\">{spec['description']}</div>"
@@ -1181,107 +1761,203 @@ def kpi_section(filtered: pd.DataFrame):
 
 
 def _queue_chart(data: pd.DataFrame, chart_type: str):
+    base = alt.Chart(data)
+    palette = alt.Scale(range=CHART_CATEGORY_COLORS)
+
     if chart_type == "Pie":
-        return (
-            alt.Chart(data)
-            .mark_arc()
+        chart = (
+            base.mark_arc(
+                innerRadius=45,
+                cornerRadius=6,
+                stroke="rgba(255,255,255,0.12)",
+                strokeWidth=1,
+            )
             .encode(
                 theta=alt.Theta("Tickets:Q", stack=True),
-                color=alt.Color("Assigned To Queue:N", legend=None, title="Queue"),
+                color=alt.Color(
+                    "Assigned To Queue:N",
+                    scale=palette,
+                    legend=alt.Legend(
+                        title=None,
+                        orient="bottom",
+                        direction="horizontal",
+                        labelLimit=160,
+                    ),
+                ),
                 tooltip=["Assigned To Queue", "Tickets"],
             )
-            .properties(title="Tickets by queue", height=300)
         )
-    # Default to bar
-    return (
-        alt.Chart(data)
-        .mark_bar()
+        return _apply_chart_theme(
+            chart, title="Ticket share by queue", view_fill=False
+        )
+
+    chart = (
+        base.mark_bar(
+            size=22,
+            cornerRadiusTopLeft=8,
+            cornerRadiusTopRight=8,
+        )
         .encode(
-            x=alt.X("Tickets:Q"),
+            x=alt.X("Tickets:Q", title="Tickets"),
             y=alt.Y("Assigned To Queue:N", sort="-x", title="Queue"),
+            color=alt.Color("Assigned To Queue:N", scale=palette, legend=None),
             tooltip=["Assigned To Queue", "Tickets"],
         )
-        .properties(title="Tickets by queue", height=300)
     )
+    return _apply_chart_theme(chart, title="Tickets by queue")
 
 
 def _status_chart(data: pd.DataFrame, chart_type: str):
+    base = alt.Chart(data)
+    palette = alt.Scale(range=CHART_CATEGORY_COLORS)
+
     if chart_type == "Pie":
-        return (
-            alt.Chart(data)
-            .mark_arc()
+        chart = (
+            base.mark_arc(
+                innerRadius=45,
+                cornerRadius=6,
+                stroke="rgba(255,255,255,0.1)",
+                strokeWidth=1,
+            )
             .encode(
                 theta=alt.Theta("Tickets:Q", stack=True),
-                color=alt.Color("Status:N", legend=None),
+                color=alt.Color(
+                    "Status:N",
+                    scale=palette,
+                    legend=alt.Legend(
+                        title=None,
+                        orient="bottom",
+                        direction="horizontal",
+                        labelLimit=160,
+                    ),
+                ),
                 tooltip=["Status", "Tickets"],
             )
-            .properties(title="Tickets by status", height=300)
         )
-    return (
-        alt.Chart(data)
-        .mark_bar()
+        return _apply_chart_theme(
+            chart, title="Ticket share by status", view_fill=False
+        )
+
+    chart = (
+        base.mark_bar(
+            size=20,
+            cornerRadiusTopLeft=8,
+            cornerRadiusTopRight=8,
+        )
         .encode(
-            x=alt.X("Tickets:Q"),
-            y=alt.Y("Status:N", sort="-x"),
+            x=alt.X("Tickets:Q", title="Tickets"),
+            y=alt.Y("Status:N", sort="-x", title="Status"),
+            color=alt.Color("Status:N", scale=palette, legend=None),
             tooltip=["Status", "Tickets"],
         )
-        .properties(title="Tickets by status", height=300)
     )
+    return _apply_chart_theme(chart, title="Tickets by status")
 
 
 def _category_chart(data: pd.DataFrame, chart_type: str):
+    base = alt.Chart(data)
+    palette = alt.Scale(range=CHART_CATEGORY_COLORS)
+
     if chart_type == "Pie":
-        return (
-            alt.Chart(data)
-            .mark_arc()
+        chart = (
+            base.mark_arc(
+                innerRadius=45,
+                cornerRadius=6,
+                stroke="rgba(255,255,255,0.1)",
+                strokeWidth=1,
+            )
             .encode(
                 theta=alt.Theta("Tickets:Q", stack=True),
-                color=alt.Color("Category:N", legend=None),
+                color=alt.Color(
+                    "Category:N",
+                    scale=palette,
+                    legend=alt.Legend(
+                        title=None,
+                        orient="bottom",
+                        direction="horizontal",
+                        labelLimit=160,
+                    ),
+                ),
                 tooltip=["Category", "Tickets"],
             )
-            .properties(title="Top categories", height=300)
         )
-    return (
-        alt.Chart(data)
-        .mark_bar()
+        return _apply_chart_theme(
+            chart, title="Ticket share by category", view_fill=False
+        )
+
+    chart = (
+        base.mark_bar(
+            size=20,
+            cornerRadiusTopLeft=8,
+            cornerRadiusTopRight=8,
+        )
         .encode(
-            x=alt.X("Tickets:Q"),
-            y=alt.Y("Category:N", sort="-x"),
+            x=alt.X("Tickets:Q", title="Tickets"),
+            y=alt.Y("Category:N", sort="-x", title="Category"),
+            color=alt.Color("Category:N", scale=palette, legend=None),
             tooltip=["Category", "Tickets"],
         )
-        .properties(title="Top categories", height=300)
     )
+    return _apply_chart_theme(chart, title="Top categories")
 
 
 def _trend_chart(data: pd.DataFrame, chart_type: str):
+    base = alt.Chart(data)
     encoding = dict(
         x=alt.X("Open Date:T", title="Open date", sort="ascending"),
         y=alt.Y("Tickets:Q", title="Tickets"),
-        tooltip=["Open Date:T", "Tickets"],
+        tooltip=[
+            alt.Tooltip("Open Date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("Tickets:Q", title="Tickets"),
+        ],
     )
 
     if chart_type == "Bar":
-        chart = alt.Chart(data).mark_bar(size=18, color="#2E86AB").encode(**encoding)
+        chart = base.mark_bar(
+            cornerRadiusTopLeft=8,
+            cornerRadiusTopRight=8,
+            color=alt.Gradient(
+                gradient="linear",
+                stops=[
+                    alt.GradientStop(color="#c8b6ff", offset=0),
+                    alt.GradientStop(color="#7a56ff", offset=1),
+                ],
+                x1=0,
+                x2=1,
+                y1=1,
+                y2=0,
+            ),
+        ).encode(**encoding)
     elif chart_type == "Area":
-        chart = (
-            alt.Chart(data)
-            .mark_area(
-                color="#4DA3FF",
-                opacity=0.35,
-                interpolate="monotone",
-                line={"color": "#1976D2"},
-                point={"color": "#1976D2", "filled": True, "size": 60},
-            )
-            .encode(**encoding)
-        )
+        chart = base.mark_area(
+            interpolate="monotone",
+            color=alt.Gradient(
+                gradient="linear",
+                stops=[
+                    alt.GradientStop(color="rgba(164,140,255,0.55)", offset=0),
+                    alt.GradientStop(color="rgba(164,140,255,0.05)", offset=1),
+                ],
+                x1=0,
+                x2=0,
+                y1=1,
+                y2=0,
+            ),
+            line={"color": "#d9cbff", "size": 2.5},
+        ).encode(**encoding)
     else:
-        chart = (
-            alt.Chart(data)
-            .mark_line(point=True, interpolate="monotone", color="#1976D2")
-            .encode(**encoding)
-    )
+        chart = base.mark_line(
+            interpolate="monotone",
+            color="#dccfff",
+            size=2.5,
+            point=alt.OverlayMarkDef(
+                size=75,
+                fill="#f8f5ff",
+                stroke="#7a56ff",
+                strokeWidth=1.4,
+            ),
+        ).encode(**encoding)
 
-    return chart.properties(title="Tickets opened per day", height=300)
+    return _apply_chart_theme(chart, title="Tickets opened per day")
 
 
 def _queue_summary(data: pd.DataFrame) -> str:
@@ -1504,6 +2180,7 @@ def main():
     _sync_session_registry(bundle.registry)
 
     _render_header(bundle)
+    _render_sidebar_toggle()
     dataset_management_panel(bundle)
 
     if bundle.source == "local":
@@ -1563,3 +2240,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
