@@ -1,4 +1,4 @@
-# Feature Plan: Supabase CSV Management
+# Dashboard Deep Polish Follow-up Plan
 
 Progress: 100%
 - 50% – Crafted the modernised purple dashboard shell, refreshed navigation, and reimagined analytic surfaces with bespoke cards and hero visuals.

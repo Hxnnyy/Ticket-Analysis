@@ -9,7 +9,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import altair as alt
 import pandas as pd
@@ -522,6 +522,7 @@ def _inject_theme() -> None:
                 background: rgba(19, 14, 48, 0.8);
                 color: #f1edff;
             }
+
         </style>
         """,
         unsafe_allow_html=True,
@@ -926,10 +927,19 @@ def _render_dataset_row(name: str) -> None:
     if uploaded_label:
         status_bits.append(uploaded_label)
 
-    st.markdown(
-        f"<div class='dataset-card'><h4>{name}</h4><div class='dataset-meta'>{' · '.join(status_bits)}</div></div>",
-        unsafe_allow_html=True,
-    )
+    badge_class = "dataset-badge--active" if meta.included else "dataset-badge--paused"
+    badge_label = "Active" if meta.included else "Excluded"
+    dataset_card_html = f"""
+    <div class='dataset-card'>
+        <div class='dataset-card__icon'>📁</div>
+        <div class='dataset-card__body'>
+            <h4>{name}</h4>
+            <div class='dataset-meta'>{' · '.join(status_bits)}</div>
+            <span class='dataset-badge {badge_class}'>{badge_label}</span>
+        </div>
+    </div>
+    """
+    st.markdown(dataset_card_html, unsafe_allow_html=True)
 
     st.markdown("<div class='dataset-controls'>", unsafe_allow_html=True)
     include_col, delete_col = st.columns([1.3, 1])
@@ -1062,9 +1072,55 @@ def build_filters(df: pd.DataFrame) -> pd.DataFrame:
 
 def kpi_section(filtered: pd.DataFrame):
     total_tickets = len(filtered)
-    open_tickets = (~filtered["Is Closed"]).sum()
-    avg_days_open = filtered["Days Open"].mean()
-    latest_activity = filtered["Last Change Date"].max()
+    open_tickets = (
+        int((~filtered["Is Closed"]).sum()) if "Is Closed" in filtered else 0
+    )
+    avg_series = filtered["Days Open"] if "Days Open" in filtered else None
+    avg_days_open = avg_series.mean() if avg_series is not None else float("nan")
+    latest_activity = (
+        filtered["Last Change Date"].max()
+        if "Last Change Date" in filtered
+        else pd.NaT
+    )
+    long_running = (
+        int(filtered["Days Open"].gt(4).sum()) if "Days Open" in filtered else 0
+    )
+
+    avg_days_display = f"{avg_days_open:.1f}d" if pd.notna(avg_days_open) else "—"
+    latest_activity_display = (
+        latest_activity.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_activity) else "—"
+    )
+
+    open_share = (open_tickets / total_tickets) if total_tickets else 0.0
+    progress_total = min(total_tickets / 400, 1.0) if total_tickets else 0.0
+    progress_open = min(open_share, 1.0)
+    progress_avg = (
+        min((avg_days_open or 0) / 10, 1.0) if pd.notna(avg_days_open) else 0.0
+    )
+
+    hours_since_update: Optional[float] = None
+    if pd.notna(latest_activity):
+        try:
+            hours_since_update = (
+                pd.Timestamp.utcnow() - pd.to_datetime(latest_activity)
+            ).total_seconds() / 3600
+        except Exception:
+            hours_since_update = None
+
+    progress_recent = (
+        max(0.0, 1 - min(hours_since_update / 72, 1.0))
+        if hours_since_update is not None
+        else 0.0
+    )
+
+    if hours_since_update is None:
+        recent_delta = "No activity logged"
+    elif hours_since_update < 1:
+        recent_delta = "Updated <1h ago"
+    elif hours_since_update < 24:
+        recent_delta = f"Updated {hours_since_update:.0f}h ago"
+    else:
+        recent_delta = f"Updated {hours_since_update / 24:.0f}d ago"
 
     avg_days_display = f"{avg_days_open:.1f}d" if pd.notna(avg_days_open) else "—"
     latest_activity_display = (
@@ -1223,9 +1279,57 @@ def _trend_chart(data: pd.DataFrame, chart_type: str):
             alt.Chart(data)
             .mark_line(point=True, interpolate="monotone", color="#1976D2")
             .encode(**encoding)
-        )
+    )
 
     return chart.properties(title="Tickets opened per day", height=300)
+
+
+def _queue_summary(data: pd.DataFrame) -> str:
+    if data.empty:
+        return "No queue distribution available."
+    total = data["Tickets"].sum()
+    leader = data.iloc[0]
+    share = (leader["Tickets"] / total * 100) if total else 0
+    queue_name = leader["Assigned To Queue"] or "Unassigned"
+    return (
+        f"<strong>{queue_name}</strong> is carrying {int(leader['Tickets'])} tickets "
+        f"({share:.0f}% of the active workload)."
+    )
+
+
+def _category_summary(data: pd.DataFrame) -> str:
+    if data.empty:
+        return "Categories will populate once datasets are enabled."
+    top_category = data.iloc[0]
+    return (
+        f"<strong>{top_category['Category']}</strong> tops the board with {int(top_category['Tickets'])} cases; "
+        "revisit knowledge assets there first."
+    )
+
+
+def _status_summary(data: pd.DataFrame) -> str:
+    if data.empty:
+        return "Ticket status data will appear after ingestion."
+    top_status = data.iloc[0]
+    total = data["Tickets"].sum()
+    share = (top_status["Tickets"] / total * 100) if total else 0
+    status_name = top_status["Status"] or "Unknown"
+    return (
+        f"<strong>{status_name}</strong> holds {int(top_status['Tickets'])} tickets, "
+        f"commanding {share:.0f}% of the pipeline."
+    )
+
+
+def _trend_summary(data: pd.DataFrame) -> str:
+    if data.empty:
+        return "No daily activity yet — upload more history to unlock the trendline."
+    latest = data.dropna(subset=["Tickets"]).tail(1)
+    if latest.empty:
+        return "Daily ticket volumes are still being calculated."
+    latest_row = latest.iloc[0]
+    date_label = pd.to_datetime(latest_row["Open Date"]).strftime("%b %d")
+    tickets = int(latest_row["Tickets"])
+    return f"Latest snapshot: {tickets} tickets opened on <strong>{date_label}</strong>."
 
 
 def build_charts(filtered: pd.DataFrame):
